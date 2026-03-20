@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+@theme {
+  --color-dark-primary: #f2f2f2;
+  --color-dark-secondary: #e6e6e6;
+  --color-dark-card: #ffffff;
+  --color-accent: #000000;
+  --color-accent-dim: #333333;
+  --color-text-primary: #111111;
+  --color-text-secondary: #555555;
+  --color-text-muted: #888888;
+  --color-light-bg: #fafafa;
+  --color-light-card: #ffffff;
+  --color-light-text: #111111;
+  --color-light-text-secondary: #555555;
+  --color-border: #e8e8e8;
+  --color-border-light: #f2f2f2;
+
+  /* More colors for event cards (mapped to grayscale) */
+  --color-coral: #555555;
+  --color-sky: #777777;
+  --color-violet: #999999;
+  --color-amber: #bbbbbb;
+  --color-rose: #333333;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-marquee: marquee 25s linear infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Base Styles */
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body.dark {
+  background-color: #fafafa;
+  color: #111111;
+}
+
+body.light {
+  background-color: #fafafa;
+  color: #111111;
+}
+
+/* Glassmorphism */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.glass-light {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Accent text */
+.accent-text {
+  color: #000000;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #000000, #555555);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Marquee */
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 25s linear infinite;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* Horizontal timeline scrollbar - hidden but scrollable */
+.timeline-scroll {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.timeline-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbars completely while allowing scroll */
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
