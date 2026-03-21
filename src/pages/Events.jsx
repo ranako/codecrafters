@@ -9,11 +9,11 @@ export default function Events() {
   const rotations = ["-rotate-3", "rotate-2", "-rotate-[5deg]", "rotate-4", "-rotate-2", "rotate-6", "-rotate-4"];
 
   return (
-    <div className="w-full bg-[#fafafa] relative">
+    <div className="w-full bg-[#e6e4dc] relative">
       {/* Desk Texture */}
       <div 
          className="fixed inset-0 opacity-[0.05] pointer-events-none z-0" 
-         style={{ backgroundImage: 'radial-gradient(#000 1.5px, transparent 1.5px)', backgroundSize: '32px 32px' }} 
+         style={{ backgroundImage: 'radial-gradient(#2b2a27 1.5px, transparent 1.5px)', backgroundSize: '32px 32px' }} 
       />
 
       {/* ──── UPCOMING TICKETS ──── */}

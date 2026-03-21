@@ -6,7 +6,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full bg-[#fffdf5] border-t-2 border-dashed border-black mt-32 relative overflow-hidden">
+    <footer className="w-full bg-[#f5f3eb] border-t-2 border-dashed border-black mt-32 relative overflow-hidden">
       
       {/* Tape Decoration */}
       <div className="absolute top-0 right-12 w-24 h-8 bg-black/5 -translate-y-4 rotate-3 pointer-events-none" />
@@ -46,7 +46,7 @@ export default function Footer() {
                 Directory
               </h3>
               <ul className="flex flex-col gap-4">
-                {["About", "Events", "Team", "Contact", "Admin"].map((name) => (
+                {["About", "Events", "Team", "Contact"].map((name) => (
                   <li key={name}>
                     <Link
                       to={`/${name.toLowerCase()}`}

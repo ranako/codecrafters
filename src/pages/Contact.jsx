@@ -16,11 +16,11 @@ export default function Contact() {
   };
 
   return (
-    <div className="pt-32 pb-40 min-h-screen w-full bg-[#fafafa] relative overflow-hidden flex flex-col items-center justify-center">
+    <div className="pt-32 pb-40 min-h-screen w-full bg-[#e6e4dc] relative overflow-hidden flex flex-col items-center justify-center">
       {/* Desk Texture */}
       <div 
          className="absolute inset-0 opacity-[0.05] pointer-events-none" 
-         style={{ backgroundImage: 'radial-gradient(#000 1.5px, transparent 1.5px)', backgroundSize: '32px 32px' }} 
+         style={{ backgroundImage: 'radial-gradient(#2b2a27 1.5px, transparent 1.5px)', backgroundSize: '32px 32px' }} 
       />
 
       {/* The Postcard */}
@@ -133,7 +133,7 @@ export default function Contact() {
            </div>
            
            {/* Decorative Barcode */}
-           <div className="absolute bottom-0 right-0 h-12 w-48 opacity-30 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(to right, #000 0, #000 2px, transparent 2px, transparent 4px, #000 4px, #000 5px, transparent 5px, transparent 8px, #000 8px, #000 12px, transparent 12px, transparent 14px)', backgroundSize: '100% 100%' }} />
+           <div className="absolute bottom-0 right-0 h-12 w-48 opacity-30 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(to right, #2b2a27 0, #2b2a27 2px, transparent 2px, transparent 4px, #2b2a27 4px, #2b2a27 5px, transparent 5px, transparent 8px, #2b2a27 8px, #2b2a27 12px, transparent 12px, transparent 14px)', backgroundSize: '100% 100%' }} />
 
         </div>
 

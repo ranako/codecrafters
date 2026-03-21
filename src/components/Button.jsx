@@ -12,23 +12,23 @@ export default function Button({
   const theme = "light";
 
   const base =
-    "relative inline-flex items-center justify-center font-semibold rounded-full transition-all duration-300 focus:outline-none";
+    "relative inline-flex items-center justify-center font-bold tracking-widest uppercase text-sm transition-all duration-300 focus:outline-none border-2 border-black";
 
   const variants = {
     primary:
       theme === "dark"
-        ? "bg-white text-black hover:bg-white/90 hover:scale-[1.03] active:scale-[0.98]"
-        : "bg-black text-white hover:bg-black/90 hover:scale-[1.03] active:scale-[0.98]",
+        ? "bg-white text-black hover:translate-x-[2px] hover:translate-y-[2px] shadow-[4px_4px_0px_#2b2a27] hover:shadow-[0px_0px_0px_#2b2a27]"
+        : "bg-black text-white hover:bg-white hover:text-black hover:translate-x-[2px] hover:translate-y-[2px] shadow-[4px_4px_0px_#2b2a27] hover:shadow-[0px_0px_0px_#2b2a27]",
     secondary:
       theme === "dark"
-        ? "border border-white/20 text-white hover:bg-white/5 hover:border-white/40 hover:scale-[1.03] active:scale-[0.98]"
-        : "border border-black/20 text-black hover:bg-black/5 hover:border-black/40 hover:scale-[1.03] active:scale-[0.98]",
+        ? "bg-black text-white hover:bg-white hover:text-black hover:translate-x-[2px] hover:translate-y-[2px] shadow-[4px_4px_0px_#f5f3eb] hover:shadow-[0px_0px_0px_#f5f3eb]"
+        : "bg-white text-black hover:bg-black hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] shadow-[4px_4px_0px_#2b2a27] hover:shadow-[0px_0px_0px_#2b2a27]",
     accent:
-      "bg-accent text-black hover:bg-accent-dim hover:scale-[1.03] active:scale-[0.98]",
+      "bg-black text-white hover:translate-x-[2px] hover:translate-y-[2px] shadow-[4px_4px_0px_#2b2a27] hover:shadow-[0px_0px_0px_#2b2a27]",
     ghost:
       theme === "dark"
-        ? "text-text-secondary hover:text-white hover:bg-white/5 active:scale-[0.98]"
-        : "text-light-text-secondary hover:text-black hover:bg-black/5 active:scale-[0.98]",
+        ? "text-text-secondary hover:text-white hover:bg-black hover:translate-x-[2px] hover:translate-y-[2px]"
+        : "text-black hover:bg-black hover:text-white hover:translate-x-[2px] hover:translate-y-[2px]",
   };
 
   const sizes = {
@@ -41,7 +41,7 @@ export default function Button({
   const Comp = href ? "a" : "button";
 
   return (
-    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="inline-block">
+    <motion.div className="inline-block">
       <Comp
         href={href}
         onClick={onClick}

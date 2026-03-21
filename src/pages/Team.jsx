@@ -16,12 +16,12 @@ export default function Team() {
   ];
 
   return (
-    <div className="pt-40 pb-32 min-h-[90vh] w-full bg-[#fafafa] relative overflow-hidden flex flex-col items-center justify-center">
+    <div className="pt-40 pb-32 min-h-[90vh] w-full bg-[#e6e4dc] relative overflow-hidden flex flex-col items-center justify-center">
       
       {/* Subtle Polka-dot Desk Texture */}
       <div 
          className="absolute inset-0 opacity-[0.05] pointer-events-none" 
-         style={{ backgroundImage: 'radial-gradient(#000 1.5px, transparent 1.5px)', backgroundSize: '32px 32px' }} 
+         style={{ backgroundImage: 'radial-gradient(#2b2a27 1.5px, transparent 1.5px)', backgroundSize: '32px 32px' }} 
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col gap-16 md:gap-24 items-center">

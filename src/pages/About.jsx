@@ -8,12 +8,12 @@ export default function About() {
   const rotations = ["-rotate-3", "rotate-2", "-rotate-[5deg]", "rotate-4", "-rotate-2", "rotate-6", "-rotate-4"];
 
   return (
-    <div className="pt-32 pb-40 min-h-screen w-full bg-[#fafafa] relative overflow-hidden flex flex-col items-center">
+    <div className="pt-32 pb-40 min-h-screen w-full bg-[#e6e4dc] relative overflow-hidden flex flex-col items-center">
       
       {/* Desk Texture */}
       <div 
          className="absolute inset-0 opacity-[0.05] pointer-events-none" 
-         style={{ backgroundImage: 'radial-gradient(#000 1.5px, transparent 1.5px)', backgroundSize: '32px 32px' }} 
+         style={{ backgroundImage: 'radial-gradient(#2b2a27 1.5px, transparent 1.5px)', backgroundSize: '32px 32px' }} 
       />
 
       {/* ──── ORIGIN LETTER ──── */}
@@ -109,7 +109,7 @@ export default function About() {
                 className={`relative bg-[#eaeaea] p-8 pb-12 w-[240px] md:w-[280px] text-center shadow-lg border border-black/5 ${rotationClass} cursor-pointer transition-all duration-300 flex flex-col items-center`}
               >
                 {/* Hole punch and string */}
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#fafafa] shadow-[inset_0_3px_6px_rgba(0,0,0,0.1)] border border-black/10 z-20 flex items-center justify-center">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#e6e4dc] shadow-[inset_0_3px_6px_rgba(0,0,0,0.1)] border border-black/10 z-20 flex items-center justify-center">
                    <div className="w-2 h-16 bg-black/40 absolute -top-12 -z-10 transform -rotate-12" />
                 </div>
                 

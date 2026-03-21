@@ -9,14 +9,14 @@ export default function TeamCard({ member, index }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.08 }}
-      className="group relative rounded-3xl overflow-hidden aspect-[3/4] cursor-pointer bg-black/5"
+      className="group relative overflow-hidden aspect-[3/4] cursor-pointer bg-white border-2 border-black shadow-[6px_6px_0px_#2b2a27] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#2b2a27] transition-all duration-300"
     >
       {/* Background Image */}
       {member.image ? (
          <img
            src={member.image}
            alt={member.name}
-           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+           className="absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105 grayscale group-hover:grayscale-0"
          />
       ) : (
          <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-black/5">
@@ -27,28 +27,28 @@ export default function TeamCard({ member, index }) {
          </div>
       )}
 
-      {/* Gradient Overlay for text contrast */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 transition-opacity duration-300 group-hover:opacity-100" />
+      {/* Solid Contrast Box Instead of Gradient */}
+      <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300" />
 
       {/* Content Layer */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 flex flex-col justify-end pointer-events-none">
-        <h3 className="text-2xl md:text-3xl font-bold text-white mb-1 drop-shadow-md">
+      <div className="absolute bottom-4 left-4 right-4 bg-white border-2 border-black p-4 flex flex-col justify-end shadow-[4px_4px_0px_#2b2a27] transition-transform duration-300 group-hover:-translate-y-2 pointer-events-none">
+        <h3 className="text-xl md:text-2xl font-black text-black mb-1 uppercase tracking-tight">
           {member.name}
         </h3>
-        <p className="text-sm font-medium text-white/80 mb-0 drop-shadow-md">
+        <p className="text-xs font-bold font-mono text-black/60 uppercase tracking-widest mb-0">
           {member.role}
         </p>
 
         {/* LinkedIn Button - Slides in on hover entirely (pointer-events-auto overriding the parent lock) */}
         {member.linkedin && (
-          <div className="overflow-hidden h-0 group-hover:h-12 transition-all duration-300 mt-0 group-hover:mt-4 pointer-events-auto">
+          <div className="overflow-hidden h-0 group-hover:h-12 transition-all duration-300 mt-0 group-hover:mt-4 pointer-events-auto border-t-2 border-dashed border-black/20 pt-3 group-hover:pt-4">
             <motion.a
               href={member.linkedin}
               target="_blank"
               rel="noopener noreferrer"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-white text-black text-sm font-bold hover:bg-accent transition-colors shadow-lg"
+              className="inline-flex flex-1 w-full items-center justify-center gap-2 px-5 py-2 bg-black text-white text-xs tracking-widest uppercase font-black transition-colors shadow-[2px_2px_0px_rgba(0,0,0,0.5)]"
             >
               <FaLinkedin size={16} /> Connect
             </motion.a>

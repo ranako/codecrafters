@@ -1,15 +1,18 @@
 @import "tailwindcss";
 
 @theme {
+  --color-black: #2b2a27;
+  --color-white: #f5f3eb;
+  
   --color-dark-primary: #f2f2f2;
   --color-dark-secondary: #e6e6e6;
   --color-dark-card: #ffffff;
-  --color-accent: #000000;
+  --color-accent: #2b2a27;
   --color-accent-dim: #333333;
   --color-text-primary: #111111;
   --color-text-secondary: #555555;
   --color-text-muted: #888888;
-  --color-light-bg: #fafafa;
+  --color-light-bg: #e6e4dc;
   --color-light-card: #ffffff;
   --color-light-text: #111111;
   --color-light-text-secondary: #555555;
@@ -63,12 +66,12 @@ body {
 }
 
 body.dark {
-  background-color: #fafafa;
+  background-color: #e6e4dc;
   color: #111111;
 }
 
 body.light {
-  background-color: #fafafa;
+  background-color: #e6e4dc;
   color: #111111;
 }
 
@@ -89,12 +92,12 @@ body.light {
 
 /* Accent text */
 .accent-text {
-  color: #000000;
+  color: #2b2a27;
 }
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, #000000, #555555);
+  background: linear-gradient(135deg, #2b2a27, #555555);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

@@ -21,12 +21,12 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen w-full bg-[#fafafa] relative overflow-hidden flex flex-col items-center">
+    <div className="min-h-screen w-full bg-[#e6e4dc] relative overflow-hidden flex flex-col items-center">
       
       {/* Desk Texture */}
       <div 
          className="absolute inset-0 opacity-[0.05] pointer-events-none" 
-         style={{ backgroundImage: 'radial-gradient(#000 1.5px, transparent 1.5px)', backgroundSize: '32px 32px' }} 
+         style={{ backgroundImage: 'radial-gradient(#2b2a27 1.5px, transparent 1.5px)', backgroundSize: '32px 32px' }} 
       />
 
       {/* ──── HERO DESK ──── */}
@@ -178,7 +178,7 @@ export default function Home() {
       </div>
 
       {/* ──── TESTIMONIALS (Temporary Wrapper) ──── */}
-      <div className="w-full bg-[#f4f4f4] py-16 my-20 border-y border-black/5">
+      <div className="w-full py-16 my-20 border-y-2 border-black/5">
         <h2 className="text-center text-xs font-black uppercase tracking-[0.4em] text-black/30 mb-12">Club Feedback</h2>
         <TestimonialsMarquee />
       </div>
@@ -202,7 +202,7 @@ export default function Home() {
            })}
          </div>
          <div className="mt-20">
-           <Link to="/events" className="inline-block px-8 py-4 bg-white border-2 border-black text-black font-black text-xs tracking-[0.2em] uppercase hover:bg-black hover:text-white transition-colors shadow-[6px_6px_0px_#000] hover:shadow-[2px_2px_0px_#000]">
+           <Link to="/events" className="inline-block px-8 py-4 bg-white border-2 border-black text-black font-black text-xs tracking-[0.2em] uppercase hover:bg-black hover:text-white transition-colors shadow-[6px_6px_0px_#2b2a27] hover:shadow-[2px_2px_0px_#2b2a27]">
              Explore All Events
            </Link>
          </div>

@@ -31,7 +31,7 @@ export function SectionHeader({ tagline, title, description }) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="inline-block text-xs font-semibold uppercase tracking-[0.2em] accent-text mb-3"
+          className="inline-block text-[10px] md:text-xs font-black uppercase font-mono tracking-[0.2em] bg-black text-white px-2 py-1 mb-6 shadow-[2px_2px_0px_#2b2a27]"
         >
           {tagline}
         </motion.span>
@@ -41,7 +41,7 @@ export function SectionHeader({ tagline, title, description }) {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className={`text-3xl md:text-4xl lg:text-5xl font-bold mb-4 ${
+        className={`text-3xl md:text-4xl lg:text-5xl font-black font-serif uppercase tracking-tighter mb-4 ${
           theme === "dark" ? "text-white" : "text-black"
         }`}
       >
@@ -53,8 +53,8 @@ export function SectionHeader({ tagline, title, description }) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className={`max-w-2xl mx-auto text-base md:text-lg leading-relaxed ${
-            theme === "dark" ? "text-text-secondary" : "text-light-text-secondary"
+          className={`max-w-2xl mx-auto text-sm md:text-base font-bold leading-relaxed border-l-4 border-black/20 pl-4 py-1 flex-1 ${
+            theme === "dark" ? "text-text-secondary" : "text-black/60"
           }`}
         >
           {description}

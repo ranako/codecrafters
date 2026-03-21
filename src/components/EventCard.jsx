@@ -104,12 +104,12 @@ export default function EventCard({ event, index, isOpen, onToggle }) {
         viewport={{ once: true }}
         transition={{ duration: 0.5, delay: index * 0.1 }}
         whileHover={{ y: -6, rotate: "-1deg" }}
-        className={`group relative bg-[#fffdf5] border-2 border-dashed border-black/30 shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1)] hover:shadow-[0_25px_40px_-10px_rgba(0,0,0,0.2)] transition-all duration-300 flex flex-col h-full cursor-pointer overflow-hidden ${isModalOpen ? 'z-50' : 'z-10'}`}
+        className={`group relative bg-[#f5f3eb] border-2 border-dashed border-black/30 shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1)] hover:shadow-[0_25px_40px_-10px_rgba(0,0,0,0.2)] transition-all duration-300 flex flex-col h-full cursor-pointer overflow-hidden ${isModalOpen ? 'z-50' : 'z-10'}`}
         onClick={() => setIsModalOpen(true)}
       >
         {/* Ticket Perforation Holes */}
-        <div className="absolute top-1/2 -left-4 w-8 h-8 rounded-full bg-[#fafafa] border-r-2 border-dashed border-black/30 transform -translate-y-1/2 z-10" />
-        <div className="absolute top-1/2 -right-4 w-8 h-8 rounded-full bg-[#fafafa] border-l-2 border-dashed border-black/30 transform -translate-y-1/2 z-10" />
+        <div className="absolute top-1/2 -left-4 w-8 h-8 rounded-full bg-[#e6e4dc] border-r-2 border-dashed border-black/30 transform -translate-y-1/2 z-10" />
+        <div className="absolute top-1/2 -right-4 w-8 h-8 rounded-full bg-[#e6e4dc] border-l-2 border-dashed border-black/30 transform -translate-y-1/2 z-10" />
         
         {/* Top Section - Image */}
         {event.image && (
@@ -158,7 +158,7 @@ export default function EventCard({ event, index, isOpen, onToggle }) {
                 e.stopPropagation();
                 handleRegister();
               }}
-              className={`px-5 py-2.5 font-black uppercase tracking-[0.1em] text-xs shadow-[3px_3px_0px_#000] border-2 border-black hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#000] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all w-full sm:w-auto text-center flex items-center justify-center ${
+              className={`px-5 py-2.5 font-black uppercase tracking-[0.1em] text-xs shadow-[3px_3px_0px_#2b2a27] border-2 border-black hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#2b2a27] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all w-full sm:w-auto text-center flex items-center justify-center ${
                  isRegistered ? "bg-white text-black font-bold outline-dashed outline-2 outline-offset-[-4px]" : "bg-black text-white"
               }`}
             >
@@ -175,16 +175,16 @@ export default function EventCard({ event, index, isOpen, onToggle }) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="absolute inset-0 z-50 bg-[#fffdf5] flex flex-col p-5 overflow-y-auto hide-scrollbar border-[4px] border-black"
+              className="absolute inset-0 z-50 bg-[#f5f3eb] flex flex-col p-5 overflow-y-auto hide-scrollbar border-[4px] border-black"
             >
                {/* Header */}
-               <div className="flex justify-between items-start mb-4 border-b-[3px] border-black pb-4 sticky top-0 bg-[#fffdf5] z-10">
+               <div className="flex justify-between items-start mb-4 border-b-[3px] border-black pb-4 sticky top-0 bg-[#f5f3eb] z-10">
                   <h3 className="text-xl font-black font-serif uppercase leading-tight line-clamp-3 pr-2">
                     {event.title}
                   </h3>
                   <button 
                     onClick={(e) => { e.stopPropagation(); setIsModalOpen(false); }}
-                    className="w-8 h-8 shrink-0 bg-white border-2 border-black hover:bg-black hover:text-white flex items-center justify-center transition-colors text-black font-black text-lg shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
+                    className="w-8 h-8 shrink-0 bg-white border-2 border-black hover:bg-black hover:text-white flex items-center justify-center transition-colors text-black font-black text-lg shadow-[2px_2px_0px_#2b2a27] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
                   >
                     <FaTimes />
                   </button>
@@ -197,7 +197,7 @@ export default function EventCard({ event, index, isOpen, onToggle }) {
                   </p>
                   
                   {event.speakers && event.speakers.length > 0 && (
-                     <div className="font-mono text-[10px] font-bold uppercase bg-white border-2 border-black p-2 shadow-[2px_2px_0px_#000]">
+                     <div className="font-mono text-[10px] font-bold uppercase bg-white border-2 border-black p-2 shadow-[2px_2px_0px_#2b2a27]">
                         <span className="opacity-50 block mb-1">Speakers:</span>
                         {event.speakers.join(", ")}
                      </div>
@@ -211,8 +211,8 @@ export default function EventCard({ event, index, isOpen, onToggle }) {
                      
                      <button 
                        onClick={(e) => { e.stopPropagation(); handleRegister(); }}
-                       className={`w-full py-3 font-black uppercase tracking-widest shadow-[3px_3px_0px_#000] border-[3px] border-black active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all text-xs ${
-                          isRegistered ? "bg-white text-black border-dashed" : "bg-black hover:bg-white hover:text-black text-white shadow-[inset_0_0_0_0_#000] hover:shadow-[inset_0_0_0_2px_#000]"
+                       className={`w-full py-3 font-black uppercase tracking-widest shadow-[3px_3px_0px_#2b2a27] border-[3px] border-black active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all text-xs ${
+                          isRegistered ? "bg-white text-black border-dashed" : "bg-black hover:bg-white hover:text-black text-white shadow-[inset_0_0_0_0_#2b2a27] hover:shadow-[inset_0_0_0_2px_#2b2a27]"
                        }`}
                      >
                        {isRegistered ? "Ticket Secured ✓" : "Confirm RSVP ->"}

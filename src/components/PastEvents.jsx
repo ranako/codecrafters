@@ -67,7 +67,7 @@ export default function PastEvents() {
 
   return (
     <section ref={targetRef} className="relative w-full" style={{ height: `${sectionHeight}px` }}>
-      <div className="sticky top-0 h-screen w-full flex flex-col overflow-hidden bg-[#fafafa]">
+      <div className="sticky top-0 h-screen w-full flex flex-col overflow-hidden bg-[#e6e4dc]">
         
         {/* Page Title - above the wire, below the navbar */}
         <div className="absolute top-24 sm:top-28 md:top-28 left-1/2 -translate-x-1/2 z-20 text-center pointer-events-none w-full px-4">
@@ -149,18 +149,18 @@ export default function PastEvents() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute inset-0 z-50 bg-[#fffdf5] flex flex-col p-5 overflow-y-auto hide-scrollbar border-[4px] border-black text-left cursor-default pointer-events-auto"
+                        className="absolute inset-0 z-50 bg-[#f5f3eb] flex flex-col p-5 overflow-y-auto hide-scrollbar border-[4px] border-black text-left cursor-default pointer-events-auto"
                         onClick={(e) => e.stopPropagation()}
                       >
                           {/* Header */}
-                         <div className="border-b-[3px] border-black pb-4 mb-4 sticky top-0 bg-[#fffdf5] z-10 flex flex-col">
+                         <div className="border-b-[3px] border-black pb-4 mb-4 sticky top-0 bg-[#f5f3eb] z-10 flex flex-col">
                             <div className="flex justify-between items-start mb-3">
-                              <span className="inline-flex items-center gap-1.5 bg-white border-2 border-black px-2 py-1 text-[10px] font-black uppercase font-mono shadow-[2px_2px_0px_#000] w-fit">
+                              <span className="inline-flex items-center gap-1.5 bg-white border-2 border-black px-2 py-1 text-[10px] font-black uppercase font-mono shadow-[2px_2px_0px_#2b2a27] w-fit">
                                 <FaCalendarAlt className="text-black/50" /> {event.date}
                               </span>
                               <button 
                                 onClick={(e) => { e.stopPropagation(); setSelectedEvent(null); }}
-                                className="w-8 h-8 shrink-0 bg-white border-2 border-black hover:bg-black hover:text-white flex items-center justify-center transition-colors text-black font-black text-lg shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
+                                className="w-8 h-8 shrink-0 bg-white border-2 border-black hover:bg-black hover:text-white flex items-center justify-center transition-colors text-black font-black text-lg shadow-[2px_2px_0px_#2b2a27] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
                               >
                                 <FaTimes />
                               </button>
@@ -183,7 +183,7 @@ export default function PastEvents() {
                                </span>
                                
                                {/* Slider Container */}
-                               <div className="w-full relative aspect-[4/3] bg-white border-[3px] border-black shadow-[4px_4px_0px_#000] overflow-hidden flex flex-col group mt-1">
+                               <div className="w-full relative aspect-[4/3] bg-white border-[3px] border-black shadow-[4px_4px_0px_#2b2a27] overflow-hidden flex flex-col group mt-1">
                                  
                                  <div className="flex-1 w-full bg-black relative overflow-hidden">
                                     <AnimatePresence mode="wait">
