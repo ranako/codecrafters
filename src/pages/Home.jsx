@@ -190,7 +190,7 @@ export default function Home() {
            {upcomingEventsData.slice(0, 2).map((e, i) => {
               // Wrap the standard event card in a rotated scrapbook aesthetic
               return (
-                 <motion.div key={e.id} className={rotations[i % rotations.length] + " cursor-pointer hover:rotate-0 hover:scale-[1.03] hover:z-50 transition-all duration-300 w-full max-w-lg bg-white p-4 shadow-xl border border-black/5"}>
+                 <motion.div key={e.id} className={`cursor-pointer transition-all duration-300 w-full max-w-lg bg-white p-4 shadow-xl border border-black/5 ${openEventId === e.id ? 'rotate-0 scale-[1.03] z-50' : `${rotations[i % rotations.length]} hover:rotate-0 hover:scale-[1.03] hover:z-50`}`}>
                     <EventCard 
                       event={e} 
                       index={i} 

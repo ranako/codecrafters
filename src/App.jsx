@@ -12,6 +12,8 @@ const Events = lazy(() => import("./pages/Events"));
 const Team = lazy(() => import("./pages/Team"));
 const Contact = lazy(() => import("./pages/Contact"));
 
+const Admin = lazy(() => import("./pages/Admin"));
+
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -49,6 +51,7 @@ export default function App() {
               <Route path="/events" element={<AnimatedPage><Events /></AnimatedPage>} />
               <Route path="/team" element={<AnimatedPage><Team /></AnimatedPage>} />
               <Route path="/contact" element={<AnimatedPage><Contact /></AnimatedPage>} />
+              <Route path="/admin" element={<AnimatedPage><Admin /></AnimatedPage>} />
             </Routes>
           </AnimatePresence>
         </Suspense>

@@ -80,7 +80,7 @@ export const aboutData = {
   ],
 };
 
-export const upcomingEventsData = [
+const defaultUpcomingEventsData = [
   {
     id: 1,
     title: "Global Hackathon 2026",
@@ -107,7 +107,9 @@ export const upcomingEventsData = [
   }
 ];
 
-export const teamData = {
+export const upcomingEventsData = JSON.parse(localStorage.getItem('admin_upcomingEventsData')) || defaultUpcomingEventsData;
+
+const defaultTeamData = {
   og: [
     {
       name: "Maadhav Sharma",
@@ -174,6 +176,8 @@ export const teamData = {
   ],
 };
 
+export const teamData = JSON.parse(localStorage.getItem('admin_teamData')) || defaultTeamData;
+
 export const socialLinks = [
   {
     name: "LinkedIn",
@@ -223,7 +227,7 @@ export const projectsData = [
   }
 ];
 
-export const testimonialsData = [
+const defaultTestimonialsData = [
   {
     id: 1,
     name: "Alex Johnson",
@@ -254,7 +258,9 @@ export const testimonialsData = [
   }
 ];
 
-export const pastEventsData = [
+export const testimonialsData = JSON.parse(localStorage.getItem('admin_testimonialsData')) || defaultTestimonialsData;
+
+const defaultPastEventsData = [
   {
     id: 1,
     title: "Cyber Security Workshop",
@@ -325,3 +331,5 @@ export const pastEventsData = [
     ]
   }
 ];
+
+export const pastEventsData = JSON.parse(localStorage.getItem('admin_pastEventsData')) || defaultPastEventsData;

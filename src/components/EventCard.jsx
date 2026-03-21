@@ -73,14 +73,23 @@ export default function EventCard({ event, index, isOpen, onToggle }) {
   const setIsModalOpen = onToggle;
   const [isRegistered, setIsRegistered] = useState(false);
 
-  // Prevent background scrolling when modal is open
+  // Close modal on scroll instead of preventing background scrolling
   useEffect(() => {
     if (isModalOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
+      const handleScroll = () => {
+        setIsModalOpen(false);
+      };
+      
+      const timeoutId = setTimeout(() => {
+        window.addEventListener("scroll", handleScroll, { passive: true });
+      }, 100);
+
+      return () => {
+        clearTimeout(timeoutId);
+        window.removeEventListener("scroll", handleScroll);
+      };
     }
-  }, [isModalOpen]);
+  }, [isModalOpen, setIsModalOpen]);
 
   const handleRegister = () => {
      setIsRegistered(true);

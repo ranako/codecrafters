@@ -46,7 +46,7 @@ export default function Footer() {
                 Directory
               </h3>
               <ul className="flex flex-col gap-4">
-                {["About", "Events", "Team", "Contact"].map((name) => (
+                {["About", "Events", "Team", "Contact", "Admin"].map((name) => (
                   <li key={name}>
                     <Link
                       to={`/${name.toLowerCase()}`}
