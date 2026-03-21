@@ -6,7 +6,7 @@ export default function Button({
   size = "md",
   onClick,
   href,
-  className = "",
+  className = "", 
   ...props  
 }) {
   const theme = "light";
