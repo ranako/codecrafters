@@ -5,11 +5,18 @@ import { socialLinks } from "../data/siteData";
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
+  const pastelColors = [
+    "hover:bg-[#e3ebd5]", // Sage
+    "hover:bg-[#dce4f0]", // Slate
+    "hover:bg-[#f0e3dc]", // Peach
+  ];
+
   return (
     <footer className="w-full bg-[#f5f3eb] border-t-2 border-dashed border-black mt-32 relative overflow-hidden">
       
       {/* Tape Decoration */}
-      <div className="absolute top-0 right-12 w-24 h-8 bg-black/5 -translate-y-4 rotate-3 pointer-events-none" />
+      <div className="absolute top-0 right-12 w-24 h-8 bg-[#e6dcf0]/90 border border-black/10 -translate-y-4 rotate-3 pointer-events-none" />
+      <div className="absolute top-0 left-24 w-16 h-8 bg-[#e3ebd5]/90 border border-black/10 -translate-y-5 -rotate-6 pointer-events-none hidden md:block" />
 
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16 lg:py-20">
         <div className="flex flex-col md:flex-row justify-between gap-12 md:gap-8">
@@ -68,7 +75,7 @@ export default function Footer() {
               
               {/* Social Grid */}
               <div className="grid grid-cols-4 gap-3 mb-8 w-fit">
-                {socialLinks.map((social) => (
+                {socialLinks.map((social, index) => (
                   <motion.a
                     key={social.name}
                     href={social.url}
@@ -76,7 +83,7 @@ export default function Footer() {
                     rel="noopener noreferrer"
                     whileHover={{ scale: 1.05, rotate: (Math.random() > 0.5 ? 4 : -4), y: -2 }}
                     whileTap={{ scale: 0.95 }}
-                    className="w-10 h-10 bg-white border-2 border-black text-black flex items-center justify-center transition-all duration-300 hover:bg-black hover:text-white hover:shadow-[3px_3px_0px_rgba(0,0,0,0.2)]"
+                    className={`w-10 h-10 bg-white border-2 border-black text-black flex items-center justify-center transition-all duration-300 hover:text-black hover:shadow-[3px_3px_0px_rgba(0,0,0,0.2)] ${pastelColors[index % pastelColors.length]}`}
                     aria-label={social.name}
                   >
                     <social.icon size={18} />

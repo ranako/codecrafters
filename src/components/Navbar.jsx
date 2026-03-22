@@ -56,7 +56,7 @@ export default function Navbar() {
                       {isActive && (
                         <motion.div
                           layoutId="nav-indicator-desktop"
-                          className="absolute -bottom-1 left-0 right-0 h-[2px] bg-black"
+                          className="absolute -bottom-[6px] left-0 right-0 h-[3px] bg-[#a0b4d4]"
                           transition={{ type: "spring", stiffness: 400, damping: 30 }}
                         />
                       )}
@@ -68,7 +68,7 @@ export default function Navbar() {
               {/* Minimal Action Button */}
               <Link 
                 to="/contact" 
-                className="ml-4 px-5 py-2 bg-transparent text-black text-[11px] font-black uppercase tracking-widest border-2 border-black hover:bg-black hover:text-white transition-all shadow-[2px_2px_0px_#2b2a27] hover:shadow-[0px_0px_0px_#2b2a27] hover:translate-x-[2px] hover:translate-y-[2px]"
+                className="ml-4 px-5 py-2 bg-transparent text-black text-[11px] font-black uppercase tracking-widest border-2 border-black hover:bg-[#f0e3dc] transition-all shadow-[2px_2px_0px_#2b2a27] hover:shadow-[0px_0px_0px_#2b2a27] hover:translate-x-[2px] hover:translate-y-[2px]"
               >
                  Join Us
               </Link>
@@ -109,7 +109,7 @@ export default function Navbar() {
                       <Link
                         to={link.path}
                         className={`block text-lg font-bold tracking-wide transition-colors duration-200 px-4 py-3 border-2 border-transparent ${
-                          isActive ? "bg-black text-white" : "text-black/50 hover:text-black hover:bg-black hover:text-white hover:border-black"
+                          isActive ? "bg-[#e3ebd5] text-black border-black/10" : "text-black/50 hover:text-black hover:bg-black hover:text-white hover:border-black"
                         }`}
                       >
                         {link.name}

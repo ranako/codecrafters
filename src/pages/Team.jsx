@@ -3,20 +3,18 @@ import { teamData } from "../data/siteData";
 import { FaLinkedin } from "react-icons/fa";
 
 export default function Team() {
-  const rotations = [
-    "-rotate-3",
-    "rotate-2",
-    "-rotate-6",
-    "rotate-4",
-    "-rotate-2",
-    "rotate-5",
-    "-rotate-4",
-    "rotate-3",
-    "-rotate-1"
+  const rotations = [-3, 2, -6, 4, -2, 5, -4, 3, -1];
+  
+  const pastelBgs = [
+    "bg-[#e3ebd5]/90", // Sage
+    "bg-[#dce4f0]/90", // Slate
+    "bg-[#f0e3dc]/90", // Peach
+    "bg-[#e6dcf0]/90", // Lilac
+    "bg-[#f0ecd5]/90", // Pale Yellow
   ];
 
   return (
-    <div className="pt-40 pb-32 min-h-[90vh] w-full bg-[#e6e4dc] relative overflow-hidden flex flex-col items-center justify-center">
+    <div className="pt-28 pb-20 min-h-[80vh] w-full bg-[#e6e4dc] relative overflow-hidden flex flex-col items-center">
       
       {/* Subtle Polka-dot Desk Texture */}
       <div 
@@ -24,29 +22,30 @@ export default function Team() {
          style={{ backgroundImage: 'radial-gradient(#2b2a27 1.5px, transparent 1.5px)', backgroundSize: '32px 32px' }} 
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col gap-16 md:gap-24 items-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col gap-12 md:gap-16 items-center">
         
-        {/* THE FOUNDRY / OG CLUSTER (Vintage Scrapbook Style) */}
-        <div className="flex flex-wrap justify-center gap-6 md:gap-10 items-center">
+        {/* THE FOUNDRY / OG CLUSTER (Enhanced Vintage Scrapbook Style) */}
+        <div className="flex flex-wrap justify-center gap-12 md:gap-20 items-center w-full">
           {teamData.og.map((member, index) => {
-            const rotationClass = rotations[index % rotations.length];
+            const rot = rotations[index % rotations.length];
 
             return (
               <motion.div
-                initial={{ opacity: 0, y: 40, scale: 0.9 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                initial={{ opacity: 0, y: 40, scale: 0.8, rotate: rot }}
+                whileInView={{ opacity: 1, y: 0, scale: 1, rotate: rot }}
                 viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: index * 0.1, type: "spring", stiffness: 90 }}
+                transition={{ duration: 0.6, delay: index * 0.1, type: "spring", stiffness: 100, bounce: 0.4 }}
+                whileHover={{ y: -6, scale: 1.02, rotate: 0, zIndex: 50, transition: { duration: 0.2 } }}
                 key={member.name}
-                // unified size and white paper
-                className={`relative group bg-white p-4 md:p-5 pb-10 shadow-[0_15px_35px_-10px_rgba(0,0,0,0.1)] hover:shadow-[0_45px_65px_-15px_rgba(0,0,0,0.2)] transition-all duration-500 ease-out flex-shrink-0 w-[200px] sm:w-[240px] lg:w-[280px] cursor-pointer ${rotationClass} hover:rotate-0 hover:-translate-y-6 hover:scale-105 hover:z-50 border border-black/5 rounded-sm`}
+                // restored size and dynamic rotations defined via framer motion
+                className="relative group bg-white p-4 md:p-5 pb-10 shadow-[0_15px_35px_-10px_rgba(0,0,0,0.15)] transition-shadow duration-300 ease-out flex-shrink-0 w-[200px] sm:w-[240px] lg:w-[280px] cursor-pointer border border-black/5 rounded-sm z-10"
               >
                 
-                {/* Yellowish Masking Tape for OG */}
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-7 bg-black/10 backdrop-blur-md shadow-sm border border-black/20 -rotate-[3deg] opacity-90 pointer-events-none z-20" />
+                {/* Pastel Masking Tape for OG */}
+                <div className={`absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-7 ${pastelBgs[index % pastelBgs.length]} backdrop-blur-md shadow-sm border border-black/10 -rotate-[2deg] pointer-events-none z-20`} />
 
                 {/* Polaroid Photo Frame - Unified Slightly Desaturated Style */}
-                <div className="w-full aspect-square bg-[#eaeaea] overflow-hidden filter saturate-[0.6] contrast-110 group-hover:saturate-100 group-hover:contrast-100 transition-all duration-700 relative">
+                <div className="w-full aspect-square bg-[#eaeaea] overflow-hidden filter saturate-[0.8] transition-all duration-700 relative">
                   {member.image ? (
                     <img
                       src={member.image}
@@ -61,16 +60,16 @@ export default function Team() {
                     </div>
                   )}
                   {/* Vignette */}
-                  <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.1)] pointer-events-none" />
+                  <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.05)] pointer-events-none" />
                 </div>
 
                 <div className="pt-5 pb-2 text-center flex flex-col items-center">
                   {/* Distinctive OG Badge */}
-                  <span className="inline-block px-3 py-1 mb-2 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] bg-black text-white rounded-sm -rotate-2 group-hover:rotate-0 transition-transform shadow-md border border-white/20">
+                  <span className="inline-block px-3 py-1 mb-2 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] bg-black text-white rounded-sm shadow-md border border-white/20">
                     The Founders
                   </span>
                   
-                  <h3 className="text-xl md:text-2xl font-black text-black tracking-tight leading-none mb-1 font-serif mt-2">
+                  <h3 className="text-xl font-black text-black tracking-tight leading-none mb-1 font-serif mt-2">
                     {member.name}
                   </h3>
                   
@@ -95,27 +94,28 @@ export default function Team() {
         {/* DESK SEPARATOR */}
         <div className="w-full max-w-sm border-t-2 border-dotted border-black/10" />
 
-        {/* CORE CLUSTER (Modern Clean Style) */}
-        <div className="flex flex-wrap justify-center gap-6 md:gap-10 items-center">
+        {/* CORE CLUSTER (Enhanced Clean Scrapbook Style) */}
+        <div className="flex flex-wrap justify-center gap-12 md:gap-20 items-center w-full">
           {teamData.core.map((member, index) => {
-            const rotationClass = rotations[(index + 4) % rotations.length];
+            const rot = rotations[(index + 4) % rotations.length];
 
             return (
               <motion.div
-                initial={{ opacity: 0, y: 40, scale: 0.9 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                initial={{ opacity: 0, y: 40, scale: 0.8, rotate: rot }}
+                whileInView={{ opacity: 1, y: 0, scale: 1, rotate: rot }}
                 viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: index * 0.1, type: "spring", stiffness: 90 }}
+                transition={{ duration: 0.6, delay: index * 0.1, type: "spring", stiffness: 100, bounce: 0.4 }}
+                whileHover={{ y: -6, scale: 1.02, rotate: 0, zIndex: 50, transition: { duration: 0.2 } }}
                 key={member.name}
-                // MODERN STYLE POLAROID: Pure White
-                className={`relative group bg-white p-4 md:p-5 pb-10 shadow-[0_15px_35px_-10px_rgba(0,0,0,0.1)] hover:shadow-[0_45px_65px_-15px_rgba(0,0,0,0.2)] transition-all duration-500 ease-out flex-shrink-0 w-[200px] sm:w-[240px] lg:w-[280px] cursor-pointer ${rotationClass} hover:rotate-0 hover:-translate-y-6 hover:scale-105 hover:z-50 border border-black/5 rounded-sm`}
+                // MODERN STYLE POLAROID
+                className="relative group bg-white p-4 md:p-5 pb-10 shadow-[0_15px_35px_-10px_rgba(0,0,0,0.15)] transition-shadow duration-300 ease-out flex-shrink-0 w-[200px] sm:w-[240px] lg:w-[280px] cursor-pointer border border-black/5 rounded-sm z-10"
               >
                 
-                {/* Clear Glossy Tape */}
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-7 bg-black/5 backdrop-blur-md shadow-sm border border-black/10 -rotate-[2deg] opacity-70 pointer-events-none z-20" />
+                {/* Pastel Glossy Tape */}
+                <div className={`absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-7 ${pastelBgs[(index + 4) % pastelBgs.length]} backdrop-blur-md shadow-sm border border-black/10 pointer-events-none z-20`} />
 
                 {/* Polaroid Photo Frame - Unified Slightly Desaturated Style */}
-                <div className="w-full aspect-square bg-[#f0f0f0] overflow-hidden filter saturate-[0.6] contrast-110 group-hover:saturate-100 group-hover:contrast-100 transition-all duration-700 relative">
+                <div className="w-full aspect-square bg-[#f0f0f0] overflow-hidden filter saturate-[0.8] transition-all duration-700 relative">
                   {member.image ? (
                     <img
                       src={member.image}
@@ -130,16 +130,16 @@ export default function Team() {
                     </div>
                   )}
                   {/* Clean Vignette */}
-                  <div className="absolute inset-0 shadow-[inset_0_0_15px_rgba(0,0,0,0.1)] pointer-events-none" />
+                  <div className="absolute inset-0 shadow-[inset_0_0_15px_rgba(0,0,0,0.05)] pointer-events-none" />
                 </div>
 
                 <div className="pt-5 pb-2 text-center flex flex-col items-center">
                   {/* Distinctive Core Badge */}
-                  <span className="inline-block px-3 py-1 mb-2 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] bg-white text-black rounded-sm -rotate-2 group-hover:rotate-0 transition-transform border border-black shadow-sm">
+                  <span className="inline-block px-3 py-1 mb-2 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] bg-white text-black rounded-sm border border-black shadow-sm">
                     Core Team
                   </span>
                   
-                  <h3 className="text-xl md:text-2xl font-black text-black tracking-tight leading-none mb-1 font-sans mt-2">
+                  <h3 className="text-xl font-black text-black tracking-tight leading-none mb-1 font-sans mt-2">
                     {member.name}
                   </h3>
                   

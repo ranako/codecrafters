@@ -44,6 +44,9 @@ const pillarsData = [
 export default function ClubPillars() {
   const [active, setActive] = useState(0);
 
+  const pastelBgs = ["bg-[#e3ebd5]", "bg-[#dce4f0]", "bg-[#f0e3dc]", "bg-[#e6dcf0]", "bg-[#f0ecd5]"];
+  const pastelText = ["text-[#6f8252]", "text-[#5b739e]", "text-[#a67a63]", "text-[#8767a1]", "text-[#91864a]"];
+
   return (
     <SectionWrapper>
       <SectionHeader
@@ -52,7 +55,7 @@ export default function ClubPillars() {
         description="The foundation of our club experience. Hover over each pillar to explore the initiatives driving our community forward."
       />
 
-      <div className="flex flex-col md:flex-row gap-4 h-[70vh] min-h-[500px] w-full mt-10">
+      <div className="flex flex-col md:flex-row gap-4 h-[60vh] min-h-[400px] w-full mt-6">
         {pillarsData.map((pillar, index) => {
           const isActive = active === index;
 
@@ -94,8 +97,8 @@ export default function ClubPillars() {
                   isActive ? "opacity-100 translate-y-0 delay-100" : "opacity-0 translate-y-8"
                 }`}
               >
-                <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center mb-6 border border-white/20 transition-transform duration-500">
-                  <pillar.icon size={24} className="text-white" />
+                <div className={`w-14 h-14 rounded-full ${pastelBgs[index % pastelBgs.length]} ${pastelText[index % pastelText.length]} flex items-center justify-center mb-6 border-[3px] border-black/20 shadow-xl transition-transform duration-500`}>
+                  <pillar.icon size={24} />
                 </div>
                 <h3 className="text-3xl md:text-4xl font-extrabold mb-4 drop-shadow-lg whitespace-nowrap">
                   {pillar.title}

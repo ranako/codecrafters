@@ -151,7 +151,7 @@ export default function Admin() {
   // --- LOGIN SCREEN ---
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#e6e4dc] flex flex-col justify-center items-center p-6 font-sans">
+      <div className="min-h-[80vh] py-20 bg-[#e6e4dc] flex flex-col justify-center items-center p-6 font-sans">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -194,7 +194,7 @@ export default function Admin() {
 
   // --- DASHBOARD SCREEN ---
   return (
-    <div className="min-h-screen bg-[#e6e4dc] pt-32 pb-24 px-6 md:px-12 lg:px-20 font-sans overflow-hidden">
+    <div className="min-h-[80vh] bg-[#e6e4dc] pt-24 pb-16 px-6 md:px-12 lg:px-20 font-sans overflow-hidden">
       
       <div className="max-w-6xl mx-auto">
         

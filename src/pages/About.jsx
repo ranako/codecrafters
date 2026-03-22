@@ -22,18 +22,18 @@ export default function About() {
            initial={{ opacity: 0, y: 50, rotate: "2deg" }}
            animate={{ opacity: 1, y: 0, rotate: "-1deg" }}
            transition={{ duration: 0.8, type: "spring" }}
-           className="bg-[#fffefaa6] backdrop-blur-md border border-black/10 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] p-8 md:p-16 lg:p-24 relative"
+           className="bg-[#fffefaa6] backdrop-blur-md border border-black/10 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] p-6 md:p-10 lg:p-12 relative"
         >
            {/* Paper Clip */}
            <div className="absolute -top-6 left-16 w-8 h-16 border-4 border-gray-400 rounded-full bg-transparent z-20 shadow-sm transform rotate-[15deg]">
               <div className="absolute top-2 left-1/2 -translate-x-1/2 w-4 h-12 border-4 border-gray-400 rounded-full" />
            </div>
 
-           <div className="text-center mb-12">
-             <span className="inline-block px-3 py-1 bg-black text-white text-[10px] font-black uppercase tracking-[0.4em] mb-6">
+           <div className="text-center mb-8">
+             <span className="inline-block px-3 py-1 bg-black text-white text-[10px] font-black uppercase tracking-[0.4em] mb-4">
                Our Origin Story
              </span>
-             <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-black leading-[0.9] tracking-tighter uppercase font-serif mb-6">
+             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-black leading-[0.9] tracking-tighter uppercase font-serif mb-4">
                The Story Behind <br/> CodeCrafters
              </h1>
              <p className="text-lg md:text-xl font-bold text-black/50 font-sans tracking-tight">
@@ -51,7 +51,7 @@ export default function About() {
            </div>
            
            {/* Signed Signature */}
-           <div className="mt-16 text-right">
+           <div className="mt-8 text-right">
               <p className="text-sm font-bold text-black/40 uppercase tracking-widest mb-2">Signed,</p>
               <h2 className="text-4xl text-black font-serif italic -rotate-2">The Foundry</h2>
            </div>

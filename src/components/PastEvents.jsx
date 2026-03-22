@@ -70,7 +70,7 @@ export default function PastEvents() {
       <div className="sticky top-0 h-screen w-full flex flex-col overflow-hidden bg-[#e6e4dc]">
         
         {/* Page Title - above the wire, below the navbar */}
-        <div className="absolute top-24 sm:top-28 md:top-28 left-1/2 -translate-x-1/2 z-20 text-center pointer-events-none w-full px-4">
+        <div className="absolute top-20 sm:top-24 md:top-24 left-1/2 -translate-x-1/2 z-20 text-center pointer-events-none w-full px-4">
            <div className="inline-block relative">
              <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black font-serif text-black tracking-tighter bg-white/50 backdrop-blur-md px-4 sm:px-6 py-2 border-2 border-black/10 shadow-sm">
                The Photo Album
@@ -82,12 +82,12 @@ export default function PastEvents() {
         </div>
 
         {/* The Fixed Horizontal Wire — positioned below the heading */}
-        <div className="absolute top-[28vh] sm:top-[28vh] md:top-[28vh] left-0 w-full h-[2px] sm:h-[3px] bg-[#1a1a1a] shadow-[0_3px_8px_rgba(0,0,0,0.25)] z-0" />
+        <div className="absolute top-[24vh] sm:top-[24vh] md:top-[24vh] left-0 w-full h-[2px] sm:h-[3px] bg-[#1a1a1a] shadow-[0_3px_8px_rgba(0,0,0,0.25)] z-0" />
 
         <motion.div 
           ref={contentRef}
           style={{ x }} 
-          className="flex items-start gap-6 sm:gap-10 md:gap-14 w-max pl-[5vw] sm:pl-[10vw] pr-[5vw] sm:pr-[10vw] mt-[28vh]"
+          className="flex items-start gap-6 sm:gap-10 md:gap-14 w-max pl-[5vw] sm:pl-[10vw] pr-[5vw] sm:pr-[10vw] mt-[24vh]"
         >
           {pastEventsData.map((event, i) => {
             const rotationClass = rotations[i % rotations.length];

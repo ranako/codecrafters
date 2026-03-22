@@ -17,8 +17,8 @@ export default function Events() {
       />
 
       {/* ──── UPCOMING TICKETS ──── */}
-      <section className="relative w-full max-w-7xl mx-auto px-4 z-10 pt-32 pb-32 text-center">
-         <div className="mb-16 inline-block">
+      <section className="relative w-full max-w-7xl mx-auto px-4 z-10 pt-24 pb-20 text-center">
+         <div className="mb-10 inline-block">
              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30 mb-2 block border-b-2 border-dashed border-black/10 pb-2">Schedule</span>
              <h2 className="text-4xl md:text-5xl lg:text-6xl font-black font-serif text-black uppercase tracking-tighter">
                Upcoming Tickets

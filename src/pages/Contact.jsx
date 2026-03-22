@@ -16,7 +16,7 @@ export default function Contact() {
   };
 
   return (
-    <div className="pt-32 pb-40 min-h-screen w-full bg-[#e6e4dc] relative overflow-hidden flex flex-col items-center justify-center">
+    <div className="py-20 min-h-[80vh] w-full bg-[#e6e4dc] relative overflow-hidden flex flex-col items-center">
       {/* Desk Texture */}
       <div 
          className="absolute inset-0 opacity-[0.05] pointer-events-none" 
@@ -30,9 +30,9 @@ export default function Contact() {
          transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
          className="relative w-full max-w-5xl bg-[#fffef5] border border-black/10 shadow-[0_25px_50px_-15px_rgba(0,0,0,0.2)] flex flex-col md:flex-row p-8 md:p-14 z-10"
       >
-        {/* Postcard Stamp */}
+        {/* Postcard Stamp - Lilac Accent */}
         <div className="absolute top-8 right-8 w-20 h-24 flex items-center justify-center rotate-[15deg] pointer-events-none z-30">
-           <div className="w-16 h-20 bg-black text-white font-serif flex items-center justify-center text-[10px] text-center p-1 border border-black/20 shadow-sm" style={{ clipPath: "polygon(5% 0%, 95% 0%, 100% 5%, 100% 95%, 95% 100%, 5% 100%, 0% 95%, 0% 5%)" }}>
+           <div className="w-16 h-20 bg-[#ba9ed1] text-black font-serif flex items-center justify-center text-[10px] text-center p-1 border border-black/20 shadow-sm" style={{ clipPath: "polygon(5% 0%, 95% 0%, 100% 5%, 100% 95%, 95% 100%, 5% 100%, 0% 95%, 0% 5%)" }}>
              Express<br/>Mail
            </div>
            <div className="absolute inset-0 border-[3px] border-black/20 rounded-full w-24 h-24 -left-2 -top-2" style={{ clipPath: "polygon(0 0, 50% 0, 50% 100%, 0 100%)" }} />
@@ -93,7 +93,7 @@ export default function Contact() {
                </div>
              </div>
 
-             <button type="submit" className="mt-8 px-8 py-4 bg-black text-white font-black uppercase tracking-[0.2em] text-sm hover:scale-105 active:scale-95 transition-all shadow-[6px_6px_0px_#ccc] hover:shadow-[2px_2px_0px_#ccc] w-full border border-black flex items-center justify-center gap-3">
+             <button type="submit" className="mt-8 px-8 py-4 bg-black text-white font-black uppercase tracking-[0.2em] text-sm hover:scale-105 active:scale-95 transition-all shadow-[6px_6px_0px_#ccc] hover:shadow-[2px_2px_0px_#ccc] w-full border border-black flex items-center justify-center gap-3 hover:bg-[#a3b18a] hover:text-black">
                {submitted ? "Postcard Sent!" : <> Drop in Mailbox <FaPaperPlane className="text-xs" /></>}
              </button>
            </form>
@@ -111,7 +111,7 @@ export default function Contact() {
              
              <div className="border-b-2 border-black/20 pb-2 flex flex-col items-end text-right">
                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30">Digital Inbox:</span>
-                <p className="text-xl font-bold font-mono text-white mt-2 bg-black px-2 py-1 transform rotate-1">{contactData.email}</p>
+                <p className="text-xl font-bold font-mono text-black mt-2 bg-[#dce4f0] border-[2px] border-black shadow-[3px_3px_0px_#2b2a27] px-2 py-1 transform rotate-1">{contactData.email}</p>
              </div>
 
              <div className="pb-2 flex flex-col items-end text-right">

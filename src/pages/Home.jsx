@@ -16,9 +16,25 @@ export default function Home() {
     "-rotate-[5deg]",
     "rotate-4",
     "-rotate-2",
+    "-rotate-6",
+    "rotate-4",
+    "-rotate-2",
     "rotate-6",
     "-rotate-4",
   ];
+
+  /* Editorial Pastel Palette */
+  const pastelBgs = [
+    "bg-[#e3ebd5] border-[#b1c398]", // Sage
+    "bg-[#dce4f0] border-[#a0b4d4]", // Slate
+    "bg-[#f0e3dc] border-[#d6b7a5]", // Peach
+    "bg-[#e6dcf0] border-[#ba9ed1]", // Lilac
+    "bg-[#f0ecd5] border-[#cfc69b]", // Pale Yellow
+  ];
+
+  const coreValueAccents = ["bg-[#a3b18a]", "bg-[#8ea2c4]", "bg-[#c29f8a]"];
+  const coreValueHovers = ["group-hover:bg-[#a3b18a]", "group-hover:bg-[#8ea2c4]", "group-hover:bg-[#c29f8a]"];
+  const statColors = ["text-[#a3b18a] bg-[#e3ebd5]", "text-[#8ea2c4] bg-[#dce4f0]", "text-[#c29f8a] bg-[#f0e3dc]"];
 
   return (
     <div className="min-h-screen w-full bg-[#e6e4dc] relative overflow-hidden flex flex-col items-center">
@@ -30,7 +46,7 @@ export default function Home() {
       />
 
       {/* ──── HERO DESK ──── */}
-      <section className="relative min-h-[90vh] w-full flex flex-col items-center justify-center pt-32 pb-20 z-10 overflow-hidden">
+      <section className="relative min-h-screen w-full flex flex-col items-center justify-center pt-16 z-10 overflow-hidden">
         
         <div className="relative max-w-5xl mx-auto px-4 text-center">
            
@@ -97,7 +113,7 @@ export default function Home() {
                   whileHover={{ scale: 1.15, zIndex: 50, rotate: "0deg" }}
                   transition={{ type: "spring", delay: 0.8 + (i * 0.1) }}
                   key={d.name}
-                  className={`pointer-events-auto absolute flex items-center gap-2 px-4 py-3 bg-white border border-black shadow-[0_5px_15px_-5px_rgba(0,0,0,0.15)] text-black font-bold text-sm tracking-wide ${rotation} cursor-pointer hover:shadow-2xl transition-all duration-300`}
+                  className={`pointer-events-auto absolute flex items-center gap-2 px-4 py-3 ${pastelBgs[i % pastelBgs.length]} shadow-[0_5px_15px_-5px_rgba(0,0,0,0.15)] text-black/80 font-bold text-sm tracking-wide ${rotation} cursor-pointer hover:shadow-2xl transition-all duration-300`}
                   style={{ top: `${topPos}%`, left: `${leftPos}%` }}
                 >
                   <d.icon size={16} className="text-black/60" />
@@ -108,32 +124,40 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ──── ABOUT PREVIEW (Scattered Post-its) ──── */}
-      <section className="relative w-full max-w-7xl mx-auto px-4 py-24 z-10 text-center">
-         <h2 className="text-xs font-black uppercase tracking-[0.4em] text-black/20 mb-16 border-b-2 border-dashed border-black/10 pb-4 inline-block">Our Core Values</h2>
+      {/* ──── CORE VALUES (Editorial Grid Style) ──── */}
+      <section className="relative w-full max-w-7xl mx-auto px-4 py-20 z-10">
+         <div className="flex flex-col items-center mb-16 text-center">
+            <h2 className="text-sm font-black uppercase tracking-[0.4em] text-black/40 mb-4 inline-block">The Foundation</h2>
+            <div className="w-12 h-[2px] bg-black/20" />
+            <h3 className="text-3xl md:text-4xl font-serif font-black text-black mt-6 tracking-tight">Our Core Values</h3>
+         </div>
          
-         <div className="flex flex-wrap justify-center gap-8 md:gap-16">
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
            {aboutData.values.map((v, i) => {
-             const rotationClass = rotations[(i+2) % rotations.length];
-             const color = "bg-white";
-
              return (
                <motion.div
                  key={v.title}
-                 initial={{ opacity: 0, y: 50 }}
+                 initial={{ opacity: 0, y: 30 }}
                  whileInView={{ opacity: 1, y: 0 }}
                  viewport={{ once: true, margin: "-50px" }}
-                 className={`relative w-[280px] md:w-[320px] p-8 ${color} shadow-[0_15px_30px_-5px_rgba(0,0,0,0.15)] hover:shadow-2xl ${rotationClass} hover:rotate-0 hover:z-50 hover:scale-105 transition-all duration-300 cursor-pointer flex flex-col items-center text-center`}
+                 transition={{ duration: 0.5, delay: i * 0.15, type: "spring", stiffness: 90 }}
+                 className="relative group bg-white border border-black/10 p-10 flex flex-col items-start shadow-[0_15px_30px_-5px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)] transition-all duration-500 ease-out cursor-pointer overflow-hidden"
                >
-                 {/* Post it shadow/fold effect */}
-                 <div className="absolute bottom-0 right-0 w-8 h-8 bg-black/5" style={{ clipPath: "polygon(100% 0, 0 100%, 100% 100%)" }} />
-
-                 <div className="w-14 h-14 rounded-full border-2 border-black/10 flex items-center justify-center mb-6 bg-white/50 text-black shadow-sm">
-                   <v.icon size={22} />
+                 {/* Top Accent Line */}
+                 <div className={`absolute top-0 left-0 w-full h-1 ${coreValueAccents[i % coreValueAccents.length]} transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500`} />
+                 
+                 {/* Icon Block */}
+                 <div className={`w-16 h-16 bg-[#e6e4dc] border border-black/10 flex items-center justify-center mb-8 text-black ${coreValueHovers[i % coreValueHovers.length]} group-hover:text-white group-hover:border-transparent transition-all duration-500`}>
+                   <v.icon size={24} />
                  </div>
                  
-                 <h3 className="text-xl md:text-2xl font-black text-black tracking-tight mb-4 font-serif">{v.title}</h3>
-                 <p className="text-sm font-bold text-black/60 leading-relaxed font-sans">{v.description}</p>
+                 <h3 className="text-2xl font-black text-black tracking-tight mb-4 font-serif">
+                   {v.title}
+                 </h3>
+                 
+                 <p className="text-sm font-semibold text-black/60 leading-relaxed font-sans line-clamp-3">
+                   {v.description}
+                 </p>
                  
                </motion.div>
              )
@@ -142,7 +166,7 @@ export default function Home() {
       </section>
 
       {/* ──── HIGHLIGHTS (Ripped Paper Stats) ──── */}
-      <section className="relative w-full py-16 z-10">
+      <section className="relative w-full py-12 z-10">
          <div className="max-w-5xl mx-auto px-4 flex flex-wrap justify-center gap-6 md:gap-12">
             {[
               { icon: <FaUsers size={24} />, value: "1500+", label: "Community Members" },
@@ -161,7 +185,7 @@ export default function Home() {
                      {/* Faux ripped tape on top */}
                      <div className="absolute -top-3 w-16 h-6 bg-white/60 backdrop-blur-sm border border-black/10 shadow-sm -rotate-2" />
                      
-                     <div className="mb-4 text-black/30 bg-black/5 p-4 rounded-full">{stat.icon}</div>
+                     <div className={`mb-4 p-4 rounded-full ${statColors[i % statColors.length]}`}>{stat.icon}</div>
                      <div className="text-4xl md:text-5xl font-black tracking-tighter mb-2 font-serif">{stat.value}</div>
                      <div className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-black/40 text-center">{stat.label}</div>
                   </motion.div>
@@ -184,8 +208,8 @@ export default function Home() {
       </div>
 
       {/* ──── EVENTS PREVIEW DESK ──── */}
-      <section className="relative w-full max-w-7xl mx-auto px-4 py-16 z-10 text-center mb-20">
-         <h2 className="text-xs font-black uppercase tracking-[0.4em] text-black/30 mb-16 border-b-2 border-dashed border-black/10 pb-4 inline-block">Upcoming Tickets</h2>
+      <section className="relative w-full max-w-7xl mx-auto px-4 py-12 z-10 text-center mb-12">
+         <h2 className="text-xs font-black uppercase tracking-[0.4em] text-black/30 mb-10 border-b-2 border-dashed border-black/10 pb-4 inline-block">Upcoming Tickets</h2>
          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 place-items-center">
            {upcomingEventsData.slice(0, 2).map((e, i) => {
               // Wrap the standard event card in a rotated scrapbook aesthetic
@@ -201,7 +225,7 @@ export default function Home() {
               )
            })}
          </div>
-         <div className="mt-20">
+         <div className="mt-12">
            <Link to="/events" className="inline-block px-8 py-4 bg-white border-2 border-black text-black font-black text-xs tracking-[0.2em] uppercase hover:bg-black hover:text-white transition-colors shadow-[6px_6px_0px_#2b2a27] hover:shadow-[2px_2px_0px_#2b2a27]">
              Explore All Events
            </Link>

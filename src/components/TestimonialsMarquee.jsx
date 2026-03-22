@@ -5,6 +5,14 @@ import { FaQuoteLeft } from "react-icons/fa";
 
 export default function TestimonialsMarquee() {
   const repeatedTestimonials = [...testimonialsData, ...testimonialsData];
+  
+  const pastelColors = [
+    "bg-[#e3ebd5]", // Sage
+    "bg-[#dce4f0]", // Slate
+    "bg-[#f0e3dc]", // Peach
+    "bg-[#e6dcf0]", // Lilac
+    "bg-[#f0ecd5]", // Pale Yellow
+  ];
 
   return (
     <SectionWrapper className="overflow-hidden">
@@ -28,7 +36,7 @@ export default function TestimonialsMarquee() {
           {repeatedTestimonials.map((testimonial, i) => (
             <div
               key={`${testimonial.id}-${i}`}
-              className="w-[300px] md:w-[400px] bg-white p-8 border-2 border-black shadow-[6px_6px_0px_#2b2a27] flex flex-col justify-between whitespace-normal"
+              className={`w-[300px] md:w-[400px] ${pastelColors[i % pastelColors.length]} p-8 border-2 border-black shadow-[6px_6px_0px_#2b2a27] flex flex-col justify-between whitespace-normal`}
             >
               <div>
                 <FaQuoteLeft className="text-black/10 text-3xl mb-4" />

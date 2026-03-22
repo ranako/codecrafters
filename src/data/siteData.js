@@ -169,7 +169,7 @@ const defaultTeamData = {
     },
     {
       name: "Vraj Shah",
-      role: "Core Member",
+      role: "Tech Lead",
       linkedin: "",
       image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=600"
     },
