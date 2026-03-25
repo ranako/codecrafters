@@ -1,15 +1,19 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { useState } from "react";
-import { heroData, domains, aboutData, upcomingEventsData } from "../data/siteData";
+import { useEffect, useState } from "react";
+import { heroData, domains, aboutData } from "../data/siteData";
 // Utilizing existing components but forcing them into physical metaphors where possible
 import EventCard from "../components/EventCard";
 import ClubLife from "../components/ClubLife";
 import TestimonialsMarquee from "../components/TestimonialsMarquee";
 import { FaArrowRight, FaUsers, FaCalendarAlt, FaLaptopCode } from "react-icons/fa";
+import { fetchUpcomingEvents } from "../lib/contentApi";
 
 export default function Home() {
   const [openEventId, setOpenEventId] = useState(null);
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [eventsError, setEventsError] = useState("");
+  const [eventsLoading, setEventsLoading] = useState(true);
   const rotations = [
     "-rotate-3",
     "rotate-2",
@@ -35,6 +39,38 @@ export default function Home() {
   const coreValueAccents = ["bg-[#a3b18a]", "bg-[#8ea2c4]", "bg-[#c29f8a]"];
   const coreValueHovers = ["group-hover:bg-[#a3b18a]", "group-hover:bg-[#8ea2c4]", "group-hover:bg-[#c29f8a]"];
   const statColors = ["text-[#a3b18a] bg-[#e3ebd5]", "text-[#8ea2c4] bg-[#dce4f0]", "text-[#c29f8a] bg-[#f0e3dc]"];
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadUpcomingEvents() {
+      try {
+        const data = await fetchUpcomingEvents();
+        if (!isMounted) return;
+        setUpcomingEvents(data);
+        setEventsError("");
+      } catch (error) {
+        if (!isMounted) return;
+        setUpcomingEvents([]);
+        setEventsError(error.message || "Unable to load upcoming events.");
+      } finally {
+        if (isMounted) {
+          setEventsLoading(false);
+        }
+      }
+    }
+
+    loadUpcomingEvents();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const hasUpcomingEvents =
+    Array.isArray(upcomingEvents) && upcomingEvents.length > 0;
+  const showUpcomingSection =
+    hasUpcomingEvents || eventsLoading || Boolean(eventsError);
 
   return (
     <div className="min-h-screen w-full bg-[#e6e4dc] relative overflow-hidden flex flex-col items-center">
@@ -208,29 +244,41 @@ export default function Home() {
       </div>
 
       {/* ──── EVENTS PREVIEW DESK ──── */}
-      <section className="relative w-full max-w-7xl mx-auto px-4 py-12 z-10 text-center mb-12">
-         <h2 className="text-xs font-black uppercase tracking-[0.4em] text-black/30 mb-10 border-b-2 border-dashed border-black/10 pb-4 inline-block">Upcoming Tickets</h2>
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 place-items-center">
-           {upcomingEventsData.slice(0, 2).map((e, i) => {
-              // Wrap the standard event card in a rotated scrapbook aesthetic
-              return (
-                 <motion.div key={e.id} className={`cursor-pointer transition-all duration-300 w-full max-w-lg bg-white p-4 shadow-xl border border-black/5 ${openEventId === e.id ? 'rotate-0 scale-[1.03] z-50' : `${rotations[i % rotations.length]} hover:rotate-0 hover:scale-[1.03] hover:z-50`}`}>
-                    <EventCard 
-                      event={e} 
-                      index={i} 
-                      isOpen={openEventId === e.id} 
-                      onToggle={(open) => setOpenEventId(open ? e.id : null)} 
-                    />
-                 </motion.div>
-              )
-           })}
-         </div>
-         <div className="mt-12">
-           <Link to="/events" className="inline-block px-8 py-4 bg-white border-2 border-black text-black font-black text-xs tracking-[0.2em] uppercase hover:bg-black hover:text-white transition-colors shadow-[6px_6px_0px_#2b2a27] hover:shadow-[2px_2px_0px_#2b2a27]">
-             Explore All Events
-           </Link>
-         </div>
-      </section>
+      {showUpcomingSection && (
+        <section className="relative w-full max-w-7xl mx-auto px-4 py-12 z-10 text-center mb-12">
+           <h2 className="text-xs font-black uppercase tracking-[0.4em] text-black/30 mb-10 border-b-2 border-dashed border-black/10 pb-4 inline-block">Upcoming Tickets</h2>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 place-items-center">
+             {upcomingEvents.slice(0, 2).map((e, i) => {
+                // Wrap the standard event card in a rotated scrapbook aesthetic
+                return (
+                   <motion.div key={e.id} className={`cursor-pointer transition-all duration-300 w-full max-w-lg bg-white p-4 shadow-xl border border-black/5 ${openEventId === e.id ? 'rotate-0 scale-[1.03] z-50' : `${rotations[i % rotations.length]} hover:rotate-0 hover:scale-[1.03] hover:z-50`}`}>
+                      <EventCard 
+                        event={e} 
+                        index={i} 
+                        isOpen={openEventId === e.id} 
+                        onToggle={(open) => setOpenEventId(open ? e.id : null)} 
+                      />
+                   </motion.div>
+                )
+             })}
+           </div>
+           {hasUpcomingEvents && (
+             <div className="mt-12">
+               <Link to="/events" className="inline-block px-8 py-4 bg-white border-2 border-black text-black font-black text-xs tracking-[0.2em] uppercase hover:bg-black hover:text-white transition-colors shadow-[6px_6px_0px_#2b2a27] hover:shadow-[2px_2px_0px_#2b2a27]">
+                 Explore All Events
+               </Link>
+             </div>
+           )}
+           {eventsLoading && (
+             <p className="mt-6 text-xs font-black uppercase tracking-[0.3em] text-black/40">
+               Loading events...
+             </p>
+           )}
+           {eventsError && (
+             <p className="mt-6 text-sm font-bold text-red-600">{eventsError}</p>
+           )}
+        </section>
+      )}
 
     </div>
   );

@@ -1,8 +1,13 @@
 import { motion } from "framer-motion";
-import { teamData } from "../data/siteData";
+import { useEffect, useState } from "react";
 import { FaLinkedin } from "react-icons/fa";
+import { ogTeamMembers } from "../data/siteData";
+import { fetchCoreTeamMembers } from "../lib/contentApi";
 
 export default function Team() {
+  const [coreTeamMembers, setCoreTeamMembers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const rotations = [-3, 2, -6, 4, -2, 5, -4, 3, -1];
   
   const pastelBgs = [
@@ -12,6 +17,33 @@ export default function Team() {
     "bg-[#e6dcf0]/90", // Lilac
     "bg-[#f0ecd5]/90", // Pale Yellow
   ];
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCoreTeamMembers() {
+      try {
+        const data = await fetchCoreTeamMembers();
+        if (!isMounted) return;
+        setCoreTeamMembers(data);
+        setError("");
+      } catch (fetchError) {
+        if (!isMounted) return;
+        setCoreTeamMembers([]);
+        setError(fetchError.message || "Unable to load core members.");
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadCoreTeamMembers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="pt-28 pb-20 min-h-[80vh] w-full bg-[#e6e4dc] relative overflow-hidden flex flex-col items-center">
@@ -26,7 +58,7 @@ export default function Team() {
         
         {/* THE FOUNDRY / OG CLUSTER (Enhanced Vintage Scrapbook Style) */}
         <div className="flex flex-wrap justify-center gap-12 md:gap-20 items-center w-full">
-          {teamData.og.map((member, index) => {
+          {ogTeamMembers.map((member, index) => {
             const rot = rotations[index % rotations.length];
 
             return (
@@ -96,7 +128,7 @@ export default function Team() {
 
         {/* CORE CLUSTER (Enhanced Clean Scrapbook Style) */}
         <div className="flex flex-wrap justify-center gap-12 md:gap-20 items-center w-full">
-          {teamData.core.map((member, index) => {
+          {coreTeamMembers.map((member, index) => {
             const rot = rotations[(index + 4) % rotations.length];
 
             return (
@@ -160,6 +192,12 @@ export default function Team() {
             );
           })}
         </div>
+        {isLoading && (
+          <p className="text-xs font-black uppercase tracking-[0.3em] text-black/40">
+            Loading core members...
+          </p>
+        )}
+        {error && <p className="text-sm font-bold text-red-600">{error}</p>}
       </div>
     </div>
   );

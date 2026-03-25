@@ -1,12 +1,42 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { pastEventsData } from "../data/siteData";
 import { FaTimes, FaCameraRetro, FaCalendarAlt } from "react-icons/fa";
+import { fetchPastEventAlbums } from "../lib/contentApi";
 
 export default function PastEvents() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [pastEvents, setPastEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const rotations = ["-rotate-3", "rotate-2", "-rotate-[5deg]", "rotate-4", "-rotate-2", "rotate-6", "-rotate-4"];
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadPastEvents() {
+      try {
+        const data = await fetchPastEventAlbums();
+        if (!isMounted) return;
+        setPastEvents(data);
+        setError("");
+      } catch (fetchError) {
+        if (!isMounted) return;
+        setPastEvents([]);
+        setError(fetchError.message || "Unable to load the photo album.");
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadPastEvents();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (selectedEvent) {
@@ -63,7 +93,7 @@ export default function PastEvents() {
   const dropHeights = ["h-4 sm:h-6", "h-8 sm:h-12", "h-5 sm:h-8", "h-10 sm:h-16", "h-6 sm:h-10", "h-4 sm:h-6", "h-8 sm:h-14"];
 
   // Section height = content overflow + one viewport (for the sticky screen)
-  const sectionHeight = scrollRange + window.innerHeight;
+  const sectionHeight = Math.max(scrollRange, 0) + window.innerHeight;
 
   return (
     <section ref={targetRef} className="relative w-full" style={{ height: `${sectionHeight}px` }}>
@@ -89,7 +119,7 @@ export default function PastEvents() {
           style={{ x }} 
           className="flex items-start gap-6 sm:gap-10 md:gap-14 w-max pl-[5vw] sm:pl-[10vw] pr-[5vw] sm:pr-[10vw] mt-[24vh]"
         >
-          {pastEventsData.map((event, i) => {
+          {pastEvents.map((event, i) => {
             const rotationClass = rotations[i % rotations.length];
             const isSelected = selectedEvent?.id === event.id;
             const stringDrop = dropHeights[i % dropHeights.length];
@@ -226,6 +256,25 @@ export default function PastEvents() {
             );
           })}
         </motion.div>
+        {isLoading && (
+          <div className="absolute inset-x-0 bottom-16 text-center z-20">
+            <p className="text-xs font-black uppercase tracking-[0.3em] text-black/40">
+              Loading photo album...
+            </p>
+          </div>
+        )}
+        {error && (
+          <div className="absolute inset-x-0 bottom-16 text-center z-20">
+            <p className="text-sm font-bold text-red-600">{error}</p>
+          </div>
+        )}
+        {!isLoading && !error && pastEvents.length === 0 && (
+          <div className="absolute inset-x-0 bottom-16 text-center z-20">
+            <p className="text-sm font-bold text-black/50">
+              Albums will appear here once they are published.
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );
