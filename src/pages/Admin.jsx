@@ -16,6 +16,9 @@ import {
   FaEye,
   FaEyeSlash,
   FaSpinner,
+  FaGripVertical,
+  FaUpload,
+  FaLink,
 } from "react-icons/fa";
 import {
   deleteCoreTeamMembers,
@@ -31,6 +34,13 @@ import {
   saveTestimonials,
   saveUpcomingEvents,
 } from "../lib/contentApi";
+import {
+  deleteStorageFilesByUrls,
+  getStorageBucketName,
+  getStoragePathFromUrl,
+  uploadImageFile,
+  uploadImageFiles,
+} from "../lib/storageApi";
 import { supabase } from "../lib/supabase";
 
 const TABS = [
@@ -89,10 +99,47 @@ function cloneData(data) {
   return JSON.parse(JSON.stringify(data));
 }
 
+function moveArrayItem(items, fromIndex, toIndex) {
+  const nextItems = [...items];
+  const [movedItem] = nextItems.splice(fromIndex, 1);
+  nextItems.splice(toIndex, 0, movedItem);
+  return nextItems;
+}
+
 function getPersistedIds(items) {
   return items
     .map((item) => item.id)
     .filter((id) => typeof id === "string" && !id.startsWith("temp-"));
+}
+
+function getManagedImageUrlsForTab(tabId, items) {
+  const urls = [];
+
+  items.forEach((item) => {
+    if (tabId === "upcoming" && item.image) {
+      urls.push(item.image);
+    }
+
+    if (tabId === "team" && item.image) {
+      urls.push(item.image);
+    }
+
+    if (tabId === "testimonials" && item.avatar) {
+      urls.push(item.avatar);
+    }
+
+    if (tabId === "album") {
+      if (item.coverImage) {
+        urls.push(item.coverImage);
+      }
+
+      if (Array.isArray(item.photos)) {
+        urls.push(...item.photos.filter(Boolean));
+      }
+    }
+  });
+
+  return urls.filter(Boolean);
 }
 
 async function fetchByTab(tabId) {
@@ -153,11 +200,15 @@ export default function Admin() {
 
   const [activeTab, setActiveTab] = useState(TABS[0]);
   const [formData, setFormData] = useState([]);
+  const [initialSnapshot, setInitialSnapshot] = useState([]);
   const [initialIds, setInitialIds] = useState([]);
   const [isLoadingTab, setIsLoadingTab] = useState(false);
   const [tabError, setTabError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [draggedCardIndex, setDraggedCardIndex] = useState(null);
+  const [draggedPhoto, setDraggedPhoto] = useState(null);
+  const [uploadingTarget, setUploadingTarget] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -197,6 +248,7 @@ export default function Admin() {
   useEffect(() => {
     if (!session) {
       setFormData([]);
+      setInitialSnapshot([]);
       setInitialIds([]);
       return;
     }
@@ -212,10 +264,14 @@ export default function Admin() {
         const data = await fetchByTab(activeTab.id);
         if (!isMounted) return;
         setFormData(cloneData(data));
+        setInitialSnapshot(cloneData(data));
         setInitialIds(getPersistedIds(data));
+        setDraggedCardIndex(null);
+        setDraggedPhoto(null);
       } catch (error) {
         if (!isMounted) return;
         setFormData([]);
+        setInitialSnapshot([]);
         setInitialIds([]);
         setTabError(error.message || "Unable to load this section.");
       } finally {
@@ -273,11 +329,19 @@ export default function Admin() {
           ),
       );
 
+      const originalUrls = getManagedImageUrlsForTab(activeTab.id, initialSnapshot);
+      const nextUrls = getManagedImageUrlsForTab(activeTab.id, formData);
+      const removedStorageUrls = originalUrls.filter(
+        (url) => getStoragePathFromUrl(url) && !nextUrls.includes(url),
+      );
+
       await saveByTab(activeTab.id, formData);
       await deleteByTab(activeTab.id, deletedIds);
+      await deleteStorageFilesByUrls(removedStorageUrls);
 
       const refreshed = await fetchByTab(activeTab.id);
       setFormData(cloneData(refreshed));
+      setInitialSnapshot(cloneData(refreshed));
       setInitialIds(getPersistedIds(refreshed));
       setSuccess("Saved to Supabase.");
     } catch (error) {
@@ -303,6 +367,7 @@ export default function Admin() {
     try {
       const data = await fetchByTab(activeTab.id);
       setFormData(cloneData(data));
+      setInitialSnapshot(cloneData(data));
       setInitialIds(getPersistedIds(data));
     } catch (error) {
       setTabError(error.message || "Unable to reset this section.");
@@ -331,6 +396,100 @@ export default function Admin() {
     ]);
   };
 
+  const moveCard = (fromIndex, toIndex) => {
+    if (fromIndex === toIndex || fromIndex == null || toIndex == null) return;
+    setFormData((current) => moveArrayItem(current, fromIndex, toIndex));
+  };
+
+  const updatePhoto = (itemIndex, photoIndex, value) => {
+    setFormData((current) =>
+      current.map((item, index) => {
+        if (index !== itemIndex) return item;
+
+        const nextPhotos = [...(item.photos || [])];
+        nextPhotos[photoIndex] = value;
+        return { ...item, photos: nextPhotos };
+      }),
+    );
+  };
+
+  const addPhoto = (itemIndex) => {
+    setFormData((current) =>
+      current.map((item, index) =>
+        index === itemIndex
+          ? { ...item, photos: [...(item.photos || []), ""] }
+          : item,
+      ),
+    );
+  };
+
+  const removePhoto = (itemIndex, photoIndex) => {
+    setFormData((current) =>
+      current.map((item, index) => {
+        if (index !== itemIndex) return item;
+
+        return {
+          ...item,
+          photos: (item.photos || []).filter((_, indexToKeep) => indexToKeep !== photoIndex),
+        };
+      }),
+    );
+  };
+
+  const movePhoto = (itemIndex, fromIndex, toIndex) => {
+    if (fromIndex === toIndex || fromIndex == null || toIndex == null) return;
+
+    setFormData((current) =>
+      current.map((item, index) => {
+        if (index !== itemIndex) return item;
+        return { ...item, photos: moveArrayItem(item.photos || [], fromIndex, toIndex) };
+      }),
+    );
+  };
+
+  const handleImageUpload = async (file, targetKey, onComplete) => {
+    if (!file) return;
+
+    setUploadingTarget(targetKey);
+    setTabError("");
+    setSuccess("");
+
+    try {
+      const publicUrl = await uploadImageFile(file, { folder: activeTab.id });
+      onComplete(publicUrl);
+    } catch (error) {
+      setTabError(
+        error.message ||
+          `Image upload failed. Check the "${getStorageBucketName()}" Supabase storage bucket.`,
+      );
+    } finally {
+      setUploadingTarget("");
+    }
+  };
+
+  const handleImageUploads = async (files, targetKey, onComplete) => {
+    const validFiles = Array.from(files || []).filter(Boolean);
+    if (!validFiles.length) return;
+
+    setUploadingTarget(targetKey);
+    setTabError("");
+    setSuccess("");
+
+    try {
+      const publicUrls = await uploadImageFiles(validFiles, {
+        folder: activeTab.id,
+      });
+      onComplete(publicUrls);
+    } catch (error) {
+      setTabError(
+        error.message ||
+          `Image upload failed. Check the "${getStorageBucketName()}" Supabase storage bucket.`,
+      );
+    } finally {
+      setUploadingTarget("");
+    }
+  };
+
   const renderInput = (label, value, onChange, isTextArea = false) => (
     <div className="flex flex-col gap-1.5 w-full">
       <label className="text-[11px] font-bold uppercase tracking-widest text-black/50">
@@ -353,20 +512,104 @@ export default function Admin() {
     </div>
   );
 
+  const renderImageField = (label, value, onChange, uploadKey) => (
+    <div className="flex flex-col gap-3 w-full">
+      <label className="text-[11px] font-bold uppercase tracking-widest text-black/50">
+        {label}
+      </label>
+      <div
+        onDragOver={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const file = event.dataTransfer?.files?.[0];
+          handleImageUpload(file, uploadKey, onChange);
+        }}
+        className="rounded-xl border-2 border-dashed border-black/15 bg-black/[0.03] p-4"
+      >
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
+          <div className="w-full md:w-28 shrink-0">
+            <div className="aspect-square overflow-hidden rounded-lg border border-black/10 bg-white flex items-center justify-center">
+              {value ? (
+                <img src={value} alt={label} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black/30 text-center px-2">
+                  No Image
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex-1 flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-black/40">
+              <FaUpload size={12} />
+              Drag image here or upload a file
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <label className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-black text-white rounded-xl font-bold text-xs tracking-[0.2em] uppercase cursor-pointer hover:scale-[1.01] transition-transform">
+                <FaUpload size={12} />
+                {uploadingTarget === uploadKey ? "Uploading..." : "Upload"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    handleImageUpload(file, uploadKey, onChange);
+                    event.target.value = "";
+                  }}
+                />
+              </label>
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-black/30">
+                <FaLink size={11} />
+                or paste an image URL below
+              </div>
+            </div>
+            <input
+              type="text"
+              value={value || ""}
+              onChange={(event) => onChange(event.target.value)}
+              className="w-full bg-white border-2 border-transparent focus:border-black rounded-lg px-4 py-2 text-sm text-black transition-colors outline-none"
+              placeholder="https://example.com/image.jpg"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderCard = (item, index, titleField, fields) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.1 }}
       key={item.id || index}
+      draggable
+      onDragStart={() => setDraggedCardIndex(index)}
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={() => {
+        moveCard(draggedCardIndex, index);
+        setDraggedCardIndex(null);
+      }}
+      onDragEnd={() => setDraggedCardIndex(null)}
       className="bg-white border-2 border-black/10 rounded-2xl p-6 mb-6 shadow-sm relative group overflow-hidden"
     >
       <div className="absolute top-0 left-0 w-2 h-full bg-black/10 transition-colors group-hover:bg-black"></div>
 
       <div className="flex justify-between items-center mb-6 pl-2">
-        <h3 className="font-bold text-lg text-black">
-          {item[titleField] || "New Item"}
-        </h3>
+        <div className="flex items-center gap-3">
+          <span
+            className="cursor-grab text-black/30 group-hover:text-black/60 transition-colors"
+            title="Drag to reorder"
+          >
+            <FaGripVertical size={16} />
+          </span>
+          <h3 className="font-bold text-lg text-black">
+            {item[titleField] || "New Item"}
+          </h3>
+        </div>
         <button
           onClick={() => deleteItem(index)}
           className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
@@ -395,6 +638,183 @@ export default function Admin() {
                       .filter(Boolean),
                   );
                 })}
+              </div>
+            );
+          }
+
+          if (field.type === "image") {
+            return (
+              <div key={field.key} className="md:col-span-2">
+                {renderImageField(
+                  field.label,
+                  item[field.key],
+                  (nextValue) => updateItem(index, field.key, nextValue),
+                  `${activeTab.id}-${index}-${field.key}`,
+                )}
+              </div>
+            );
+          }
+
+          if (field.type === "photoList") {
+            const photos = Array.isArray(item[field.key]) ? item[field.key] : [];
+
+            return (
+              <div key={field.key} className="md:col-span-2">
+                <div className="flex flex-col gap-3">
+                  <label className="text-[11px] font-bold uppercase tracking-widest text-black/50">
+                    {field.label}
+                  </label>
+                  <div
+                    onDragOver={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                    }}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      handleImageUploads(
+                        event.dataTransfer?.files,
+                        `${activeTab.id}-${index}-${field.key}-batch`,
+                        (publicUrls) =>
+                          updateItem(index, field.key, [...photos, ...publicUrls]),
+                      );
+                    }}
+                    className="rounded-xl border-2 border-dashed border-black/15 bg-black/[0.03] p-4"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/40">
+                          Drop multiple gallery images here
+                        </p>
+                        <p className="text-xs font-bold text-black/40 mt-2">
+                          Uploaded images are appended to this album and can be reordered below.
+                        </p>
+                      </div>
+                      <label className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-black text-white rounded-xl font-bold text-xs tracking-[0.2em] uppercase cursor-pointer">
+                        <FaUpload size={12} />
+                        {uploadingTarget === `${activeTab.id}-${index}-${field.key}-batch`
+                          ? "Uploading..."
+                          : "Upload Many"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="hidden"
+                          onChange={(event) => {
+                            handleImageUploads(
+                              event.target.files,
+                              `${activeTab.id}-${index}-${field.key}-batch`,
+                              (publicUrls) =>
+                                updateItem(index, field.key, [...photos, ...publicUrls]),
+                            );
+                            event.target.value = "";
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                  {photos.map((photo, photoIndex) => (
+                    <div
+                      key={`${item.id || index}-photo-${photoIndex}`}
+                      draggable
+                      onDragStart={() =>
+                        setDraggedPhoto({ itemIndex: index, photoIndex })
+                      }
+                      onDragOver={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                      }}
+                      onDrop={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        const file = event.dataTransfer?.files?.[0];
+                        if (file) {
+                          handleImageUpload(
+                            file,
+                            `${activeTab.id}-${index}-photo-${photoIndex}`,
+                            (publicUrl) => updatePhoto(index, photoIndex, publicUrl),
+                          );
+                          setDraggedPhoto(null);
+                          return;
+                        }
+
+                        if (!draggedPhoto || draggedPhoto.itemIndex !== index) return;
+                        movePhoto(index, draggedPhoto.photoIndex, photoIndex);
+                        setDraggedPhoto(null);
+                      }}
+                      onDragEnd={() => setDraggedPhoto(null)}
+                      className="grid grid-cols-1 md:grid-cols-[72px_1fr_auto] gap-3 items-center rounded-xl border-2 border-black/10 bg-black/[0.03] p-3"
+                    >
+                      <div className="aspect-square overflow-hidden rounded-lg bg-black/5 border border-black/10 flex items-center justify-center">
+                        {photo ? (
+                          <img
+                            src={photo}
+                            alt={`Photo ${photoIndex + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black/30">
+                            Empty
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span
+                          className="cursor-grab text-black/30 group-hover:text-black/60 transition-colors"
+                          title="Drag to reorder photo"
+                        >
+                          <FaGripVertical size={16} />
+                        </span>
+                        <input
+                          type="text"
+                          value={photo || ""}
+                          onChange={(event) =>
+                            updatePhoto(index, photoIndex, event.target.value)
+                          }
+                          className="w-full bg-white border-2 border-transparent focus:border-black rounded-lg px-4 py-2 text-sm text-black transition-colors outline-none"
+                          placeholder="Paste photo URL"
+                        />
+                        <label className="inline-flex items-center justify-center gap-2 px-3 py-2 bg-black text-white rounded-lg font-bold text-[10px] tracking-[0.2em] uppercase cursor-pointer">
+                          <FaUpload size={10} />
+                          {uploadingTarget === `${activeTab.id}-${index}-photo-${photoIndex}`
+                            ? "Uploading..."
+                            : "Upload"}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(event) => {
+                              const file = event.target.files?.[0];
+                              handleImageUpload(
+                                file,
+                                `${activeTab.id}-${index}-photo-${photoIndex}`,
+                                (publicUrl) =>
+                                  updatePhoto(index, photoIndex, publicUrl),
+                              );
+                              event.target.value = "";
+                            }}
+                          />
+                        </label>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(index, photoIndex)}
+                        className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
+                        title="Delete photo"
+                      >
+                        <FaTrash size={12} />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => addPhoto(index)}
+                    className="self-start px-4 py-2 bg-black/5 hover:bg-black/10 text-black rounded-xl font-bold text-xs tracking-[0.2em] uppercase transition-colors"
+                  >
+                    Add Photo
+                  </button>
+                </div>
               </div>
             );
           }
@@ -632,7 +1052,12 @@ export default function Admin() {
                         { key: "location", label: "Location" },
                         { key: "time", label: "Time" },
                         { key: "gradient", label: "CSS Gradient Class" },
-                        { key: "image", label: "Image URL", fullWidth: true },
+                        {
+                          key: "image",
+                          label: "Event Image",
+                          type: "image",
+                          fullWidth: true,
+                        },
                         {
                           key: "speakers",
                           label: "Speakers (comma separated)",
@@ -670,7 +1095,12 @@ export default function Admin() {
                           label: "LinkedIn URL",
                           fullWidth: true,
                         },
-                        { key: "image", label: "Image URL", fullWidth: true },
+                        {
+                          key: "image",
+                          label: "Member Image",
+                          type: "image",
+                          fullWidth: true,
+                        },
                       ]),
                     )}
                     <button
@@ -695,13 +1125,14 @@ export default function Admin() {
                         { key: "date", label: "Date" },
                         {
                           key: "coverImage",
-                          label: "Cover Image URL",
+                          label: "Cover Image",
+                          type: "image",
                           fullWidth: true,
                         },
                         {
                           key: "photos",
-                          label: "Gallery Photo URLs (comma separated)",
-                          type: "stringList",
+                          label: "Gallery Photos",
+                          type: "photoList",
                         },
                         {
                           key: "description",
@@ -732,7 +1163,8 @@ export default function Admin() {
                         { key: "role", label: "Role / Title" },
                         {
                           key: "avatar",
-                          label: "Avatar Image URL",
+                          label: "Avatar Image",
+                          type: "image",
                           fullWidth: true,
                         },
                         {
