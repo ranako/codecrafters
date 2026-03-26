@@ -3,11 +3,18 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { HiMenuAlt3, HiX } from "react-icons/hi";
 import { navLinks } from "../data/siteData";
+import cclogo from "../assets/cc_logo.png";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const location = useLocation();
+
+  const handleNavClick = (isActive) => {
+    if (isActive) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -31,9 +38,13 @@ export default function Navbar() {
       >
          <div className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-5 flex items-center justify-between">
             {/* Minimalist Logo */}
-            <Link to="/" className="group flex items-center gap-3">
+            <Link
+              to="/"
+              onClick={() => handleNavClick(location.pathname === "/")}
+              className="group flex items-center gap-3"
+            >
               <span className="text-xl md:text-2xl font-black tracking-[-0.03em] text-black font-serif transition-opacity group-hover:opacity-70">
-                CodeCrafters
+                <img src={cclogo} alt="CC Logo" className="w-32" />
               </span>
             </Link>
 
@@ -46,6 +57,7 @@ export default function Navbar() {
                     <Link
                       key={link.name}
                       to={link.path}
+                      onClick={() => handleNavClick(isActive)}
                       className="relative group py-2 flex flex-col justify-center transition-colors duration-300"
                     >
                       <span className={`relative z-10 text-[11px] font-black uppercase tracking-[0.2em] transition-colors duration-300 ${
@@ -108,6 +120,7 @@ export default function Navbar() {
                     >
                       <Link
                         to={link.path}
+                        onClick={() => handleNavClick(isActive)}
                         className={`block text-lg font-bold tracking-wide transition-colors duration-200 px-4 py-3 border-2 border-transparent ${
                           isActive ? "bg-[#e3ebd5] text-black border-black/10" : "text-black/50 hover:text-black hover:bg-black hover:text-white hover:border-black"
                         }`}

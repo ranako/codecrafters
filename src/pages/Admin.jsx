@@ -41,7 +41,11 @@ import {
   uploadImageFile,
   uploadImageFiles,
 } from "../lib/storageApi";
-import { supabase } from "../lib/supabase";
+import {
+  isSupabaseConfigured,
+  missingSupabaseEnvMessage,
+  supabase,
+} from "../lib/supabase";
 
 const TABS = [
   { id: "upcoming", label: "Upcoming Events", icon: FaCalendarAlt },
@@ -211,6 +215,12 @@ export default function Admin() {
   const [uploadingTarget, setUploadingTarget] = useState("");
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setIsCheckingAuth(false);
+      setLoginError(missingSupabaseEnvMessage);
+      return undefined;
+    }
+
     let isMounted = true;
 
     async function loadSession() {
@@ -290,6 +300,12 @@ export default function Admin() {
 
   const handleLogin = async (event) => {
     event.preventDefault();
+
+    if (!isSupabaseConfigured) {
+      setLoginError(missingSupabaseEnvMessage);
+      return;
+    }
+
     setIsLoggingIn(true);
     setLoginError("");
 
@@ -877,6 +893,12 @@ export default function Admin() {
             Sign in with your Supabase admin credentials.
           </p>
 
+          {!isSupabaseConfigured && (
+            <div className="mb-6 rounded-xl border-2 border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+              {missingSupabaseEnvMessage}
+            </div>
+          )}
+
           <form onSubmit={handleLogin} className="flex flex-col gap-4 relative z-10">
             <input
               type="email"
@@ -885,6 +907,8 @@ export default function Admin() {
               onChange={(event) => setEmailInput(event.target.value)}
               className="w-full bg-black/5 border-2 border-transparent focus:border-black rounded-xl px-4 py-3 text-black outline-none transition-colors"
               autoFocus
+              autoComplete="email"
+              disabled={!isSupabaseConfigured}
             />
             <div className="relative">
               <input
@@ -893,12 +917,15 @@ export default function Admin() {
                 value={passwordInput}
                 onChange={(event) => setPasswordInput(event.target.value)}
                 className="w-full bg-black/5 border-2 border-transparent focus:border-black rounded-xl pl-4 pr-14 py-3 text-black outline-none transition-colors"
+                autoComplete="current-password"
+                disabled={!isSupabaseConfigured}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
                 className="absolute inset-y-0 right-0 px-4 text-black/50 hover:text-black transition-colors"
                 aria-label={showPassword ? "Hide password" : "Show password"}
+                disabled={!isSupabaseConfigured}
               >
                 {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
               </button>
@@ -910,7 +937,7 @@ export default function Admin() {
 
             <button
               type="submit"
-              disabled={isLoggingIn}
+              disabled={isLoggingIn || !isSupabaseConfigured}
               className="w-full bg-black text-white hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:hover:scale-100 font-black tracking-widest uppercase rounded-xl px-4 py-3 transition-transform shadow-[4px_4px_0px_rgba(0,0,0,0.2)] mt-2"
             >
               {isLoggingIn ? "Signing In..." : "Unlock"}

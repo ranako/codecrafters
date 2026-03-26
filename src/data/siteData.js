@@ -11,6 +11,12 @@ import {
   FaHandshake,
   FaGlobe,
 } from "react-icons/fa";
+import maadhavImage from "../images/maadhav.jpg";
+import vatsalImage from "../images/vatsal.jpg";
+import kunalImage from "../images/kunal.jpg";
+import pinkeshImage from "../images/pinkesh.jpg";
+import anshulImage from "../images/anshul.jpg";
+import abdulImage from "../images/abdul.jpg";
 
 export const navLinks = [
   { name: "Home", path: "/" },
@@ -84,43 +90,37 @@ export const ogTeamMembers = [
     name: "Maadhav Sharma",
     role: "Founder",
     linkedin: "https://linkedin.com/in/maadhav-sharma",
-    image:
-      "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&q=80&w=600",
+    image: maadhavImage,
   },
   {
     name: "Vatsal Bhartia",
     role: "Co-Founder",
     linkedin: "https://www.linkedin.com/in/vatsal-bhatiya",
-    image:
-      "https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&q=80&w=600",
+    image: vatsalImage,
   },
   {
     name: "Kunal Jain",
     role: "Core Member",
     linkedin: "https://www.linkedin.com/in/kunal976",
-    image:
-      "https://images.unsplash.com/photo-1583864697784-a0efc8379f70?auto=format&fit=crop&q=80&w=600",
+    image: kunalImage,
   },
   {
     name: "Pinkesh",
     role: "Core Member",
     linkedin: "https://www.linkedin.com/in/pinkesh-tripathi-ab52041b0",
-    image:
-      "https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?auto=format&fit=crop&q=80&w=600",
+    image: pinkeshImage,
   },
   {
     name: "Anshul Bhartiya",
     role: "Core Member",
     linkedin: "https://www.linkedin.com/in/anshulbhartiya",
-    image:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=600",
+    image: anshulImage,
   },
   {
     name: "Abdulhaadi Lakhani",
     role: "Core Member",
     linkedin: "https://linkedin.com/in/abdulhaadi-lakhani",
-    image:
-      "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=600",
+    image: abdulImage,
   },
 ];
 
@@ -143,32 +143,9 @@ export const socialLinks = [
 ];
 
 export const contactData = {
-  email: "hello@codecrafters.com",
+  email: "codecraftersofficial.com",
   tagline: "Let's Build Something Amazing Together",
   description:
     "Have a question, idea, or just want to connect? Reach out to us and we'll get back to you as soon as possible.",
 };
 
-export const projectsData = [
-  {
-    id: 1,
-    title: "EcoTrack App",
-    description: "A comprehensive sustainability tracking dashboard built with React and Tailwind CSS.",
-    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800",
-    tags: ["React", "Express", "MongoDB"]
-  },
-  {
-    id: 2,
-    title: "FinServe Platform",
-    description: "Next-generation fintech landing page with advanced Framer Motion animations.",
-    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800",
-    tags: ["Next.js", "Framer", "Tailwind"]
-  },
-  {
-    id: 3,
-    title: "AI Chat Assistant",
-    description: "An AI-powered developer assistant interface built using modern web standards.",
-    image: "https://images.unsplash.com/photo-1555949963-aa79dcee981c?auto=format&fit=crop&q=80&w=800",
-    tags: ["OpenAI", "React", "Node.js"]
-  }
-];

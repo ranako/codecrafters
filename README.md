@@ -1,16 +1,23 @@
-# React + Vite
+# CodeCrafters
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Local setup
 
-Currently, two official plugins are available:
+1. Copy `.env.example` to `.env`.
+2. Fill in your Supabase project values:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_SUPABASE_STORAGE_BUCKET` if you use a custom bucket name
+3. Run `npm install`.
+4. Run `npm run dev`.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The admin panel at `/admin` depends on Supabase auth. If those env vars are missing, the route will open but sign-in will fail.
 
-## React Compiler
+## Vercel setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Add the same environment variables in your Vercel project settings before deploying:
 
-## Expanding the ESLint configuration
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_SUPABASE_STORAGE_BUCKET`
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+After updating Vercel env vars, redeploy the project so the client build picks them up.
