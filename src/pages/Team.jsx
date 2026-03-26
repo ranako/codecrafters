@@ -98,7 +98,7 @@ export default function Team() {
                 <div className="pt-5 pb-2 text-center flex flex-col items-center">
                   {/* Distinctive OG Badge */}
                   <span className="inline-block px-3 py-1 mb-2 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] bg-black text-white rounded-sm shadow-md border border-white/20">
-                    The Founders
+                    The OG'S
                   </span>
                   
                   <h3 className="text-xl font-black text-black tracking-tight leading-none mb-1 font-serif mt-2">

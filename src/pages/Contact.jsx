@@ -1,18 +1,62 @@
 // Postcard layout Contact page
 import { useState } from "react";
+import emailjs from "@emailjs/browser";
 import { motion } from "framer-motion";
 import { contactData, socialLinks } from "../data/siteData";
 import { FaPaperPlane } from "react-icons/fa";
 
+const emailJsPublicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+const emailJsServiceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+const emailJsTemplateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+
 export default function Contact() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
-  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState({ type: "", message: "" });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 4000);
-    setForm({ name: "", email: "", message: "" });
+
+    if (!emailJsPublicKey || !emailJsServiceId || !emailJsTemplateId) {
+      setStatus({
+        type: "error",
+        message: "Email service is not configured yet. Add the EmailJS keys in your .env file.",
+      });
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setStatus({ type: "", message: "" });
+
+      await emailjs.send(
+        emailJsServiceId,
+        emailJsTemplateId,
+        {
+          from_name: form.name,
+          from_email: form.email,
+          message: form.message,
+          reply_to: form.email,
+          to_email: contactData.email,
+        },
+        {
+          publicKey: emailJsPublicKey,
+        }
+      );
+
+      setStatus({
+        type: "success",
+        message: "Postcard sent successfully. We'll get back to you soon!",
+      });
+      setForm({ name: "", email: "", message: "" });
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: "Could not send the postcard. Verify your EmailJS IDs and template variables.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -93,9 +137,23 @@ export default function Contact() {
                </div>
              </div>
 
-             <button type="submit" className="mt-8 px-8 py-4 bg-black text-white font-black uppercase tracking-[0.2em] text-sm hover:scale-105 active:scale-95 transition-all shadow-[6px_6px_0px_#ccc] hover:shadow-[2px_2px_0px_#ccc] w-full border border-black flex items-center justify-center gap-3 hover:bg-[#a3b18a] hover:text-black">
-               {submitted ? "Postcard Sent!" : <> Drop in Mailbox <FaPaperPlane className="text-xs" /></>}
+             <button
+               type="submit"
+               disabled={isSubmitting}
+               className="mt-8 px-8 py-4 bg-black text-white font-black uppercase tracking-[0.2em] text-sm hover:scale-105 active:scale-95 transition-all shadow-[6px_6px_0px_#ccc] hover:shadow-[2px_2px_0px_#ccc] w-full border border-black flex items-center justify-center gap-3 hover:bg-[#a3b18a] hover:text-black disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:scale-100"
+             >
+               {isSubmitting ? "Sending..." : <> Drop in Mailbox <FaPaperPlane className="text-xs" /></>}
              </button>
+
+             {status.message ? (
+               <p
+                 className={`text-sm font-semibold ${
+                   status.type === "success" ? "text-green-700" : "text-red-700"
+                 }`}
+               >
+                 {status.message}
+               </p>
+             ) : null}
            </form>
         </div>
 

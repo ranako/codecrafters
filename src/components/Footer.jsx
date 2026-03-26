@@ -1,9 +1,16 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { socialLinks } from "../data/siteData";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const location = useLocation();
+
+  const handleSamePageClick = (path) => {
+    if (location.pathname === path) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   const pastelColors = [
     "hover:bg-[#e3ebd5]", // Sage
@@ -27,7 +34,11 @@ export default function Footer() {
               <div className="inline-flex items-center gap-2 font-mono text-[10px] font-black uppercase tracking-widest bg-black text-white px-2 py-1 mb-6">
                  SYS.FOOTER // REGISTRY
               </div>
-              <Link to="/" className="inline-block mb-4 group">
+              <Link
+                to="/"
+                onClick={() => handleSamePageClick("/")}
+                className="inline-block mb-4 group"
+              >
                 <span className="text-3xl md:text-5xl font-black text-black font-serif uppercase tracking-tighter transition-colors duration-200">
                   CodeCrafters.
                 </span>
@@ -53,14 +64,21 @@ export default function Footer() {
                 Directory
               </h3>
               <ul className="flex flex-col gap-4">
-                {["About", "Events", "Team", "Contact"].map((name) => (
-                  <li key={name}>
+                {[
+                  { name: "Home", path: "/" },
+                  { name: "About", path: "/about" },
+                  { name: "Events", path: "/events" },
+                  { name: "Team", path: "/team" },
+                  { name: "Contact", path: "/contact" },
+                ].map((link) => (
+                  <li key={link.name}>
                     <Link
-                      to={`/${name.toLowerCase()}`}
+                      to={link.path}
+                      onClick={() => handleSamePageClick(link.path)}
                       className="group flex items-center gap-2 text-sm font-bold text-black/60 hover:text-black transition-all duration-200 w-fit"
                     >
                       <span className="font-mono text-xl leading-none opacity-0 group-hover:opacity-100 transition-opacity text-black/30 translate-y-[-1px]">{">"}</span>
-                      {name}
+                      {link.name}
                     </Link>
                   </li>
                 ))}
@@ -81,7 +99,7 @@ export default function Footer() {
                     href={social.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    whileHover={{ scale: 1.05, rotate: (Math.random() > 0.5 ? 4 : -4), y: -2 }}
+                    whileHover={{ scale: 1.05, rotate: index % 2 === 0 ? 4 : -4, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     className={`w-10 h-10 bg-white border-2 border-black text-black flex items-center justify-center transition-all duration-300 hover:text-black hover:shadow-[3px_3px_0px_rgba(0,0,0,0.2)] ${pastelColors[index % pastelColors.length]}`}
                     aria-label={social.name}

@@ -143,7 +143,7 @@ export const socialLinks = [
 ];
 
 export const contactData = {
-  email: "codecraftersofficial.com",
+  email: "codecraftersofficial@gmail.com",
   tagline: "Let's Build Something Amazing Together",
   description:
     "Have a question, idea, or just want to connect? Reach out to us and we'll get back to you as soon as possible.",
