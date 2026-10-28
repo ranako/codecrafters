@@ -1,14 +1,17 @@
-import { motion } from "framer-motion";
-import { aboutData } from "../data/siteData";
+import { motion as Motion } from "framer-motion";
+import { usePageContent } from "../hooks/usePageContent";
+import { withContentIcons } from "../lib/contentIcons";
 // Omitted SectionWrappers to rely on physical desk placements
 import ClubPillars from "../components/ClubPillars";
-import { FaCheckCircle, FaRocket, FaEye, FaQuoteLeft } from "react-icons/fa";
+import { FaCheckCircle, FaQuoteLeft } from "react-icons/fa";
 
 export default function About() {
+  const content = usePageContent("about");
+  const aboutData = { description: content.origin.description, longDescription: content.origin.story, communitySize: content.origin.communitySize, communitySizeLabel: content.origin.communityLabel, values: withContentIcons(content.values.items), whyJoin: content.whyJoin.items.map(item => item.text) };
   const rotations = ["-rotate-3", "rotate-2", "-rotate-[5deg]", "rotate-4", "-rotate-2", "rotate-6", "-rotate-4"];
 
   return (
-    <div className="pt-32 pb-40 min-h-screen w-full bg-[#e6e4dc] relative overflow-hidden flex flex-col items-center">
+    <div className="about-polish pt-32 pb-16 min-h-screen w-full bg-[#e6e4dc] relative overflow-hidden flex flex-col items-center">
       
       {/* Desk Texture */}
       <div 
@@ -17,8 +20,8 @@ export default function About() {
       />
 
       {/* ──── ORIGIN LETTER ──── */}
-      <section className="relative w-full max-w-4xl mx-auto px-4 z-10 mb-32">
-        <motion.div
+      <section className="relative w-full max-w-4xl mx-auto px-4 z-10 mb-16 md:mb-20">
+        <Motion.div
            initial={{ opacity: 0, y: 50, rotate: "2deg" }}
            animate={{ opacity: 1, y: 0, rotate: "-1deg" }}
            transition={{ duration: 0.8, type: "spring" }}
@@ -31,10 +34,10 @@ export default function About() {
 
            <div className="text-center mb-8">
              <span className="inline-block px-3 py-1 bg-black text-white text-[10px] font-black uppercase tracking-[0.4em] mb-4">
-               Our Origin Story
+               {content.origin.eyebrow}
              </span>
-             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-black leading-[0.9] tracking-tighter uppercase font-serif mb-4">
-               The Story Behind <br/> CodeCrafters
+             <h1 style={{ whiteSpace: "pre-line" }} className="text-4xl md:text-5xl lg:text-6xl font-black text-black leading-[0.9] tracking-tighter uppercase font-serif mb-4">
+               {content.origin.title}
              </h1>
              <p className="text-lg md:text-xl font-bold text-black/50 font-sans tracking-tight">
                {aboutData.description}
@@ -43,41 +46,38 @@ export default function About() {
            
           <div className="relative">
               <FaQuoteLeft className="absolute -top-4 -left-6 text-black/5 text-6xl pointer-events-none" />
-              <p className="text-base md:text-lg text-black/70 leading-relaxed font-serif relative z-10 columns-1 md:columns-2 gap-8 text-justify">
+              <p className="text-base md:text-lg text-black/70 leading-relaxed font-serif relative z-10 columns-1 md:columns-2 gap-8 text-left">
                 {aboutData.longDescription} 
                 <br/><br/>
-                We started with a vision to build something greater than just a club. We wanted a community. A space where students don't just consume knowledge, but actively forge it. Today, we are proud to host <span className="font-bold underline decoration-wavy decoration-black/30">{aboutData.communitySize} {aboutData.communitySizeLabel}</span>, growing every single day.
+                {content.origin.continuation} <span className="font-bold underline decoration-wavy decoration-black/30">{aboutData.communitySize} {aboutData.communitySizeLabel}</span>, {content.origin.ending}
               </p>
            </div>
            
            {/* Signed Signature */}
            <div className="mt-8 text-right">
-              <p className="text-sm font-bold text-black/40 uppercase tracking-widest mb-2">Signed,</p>
-              <h2 className="text-4xl text-black font-serif italic -rotate-2">The Foundry</h2>
+              <p className="text-sm font-bold text-black/40 uppercase tracking-widest mb-2">{content.origin.signedLabel}</p>
+              <h2 className="text-4xl text-black font-serif italic -rotate-2">{content.origin.signature}</h2>
            </div>
-        </motion.div>
+        </Motion.div>
       </section>
 
       {/* ──── CLUB PILLARS ──── */}
       {/* We use ClubPillars but wrap it in a notebook boundary or let it flow. Wait, ClubPillars might be dark theme. We will skip or replace with static elements if needed, or wrap it in a div. */}
-      <div className="w-full max-w-7xl mx-auto mb-32 z-10 relative">
+      <div className="w-full max-w-7xl mx-auto mb-16 md:mb-20 z-10 relative">
          <ClubPillars />
       </div>
 
       {/* ──── MISSION & VISION (Index Cards) ──── */}
-      <section className="relative w-full max-w-5xl mx-auto px-4 z-10 mb-32 flex flex-col md:flex-row justify-center gap-10 md:gap-16">
-          {[
-            { title: "Our Mission", text: aboutData.mission, icon: FaRocket, rotation: "-rotate-2" },
-            { title: "Our Vision", text: aboutData.vision, icon: FaEye, rotation: "rotate-3" },
-          ].map((item, i) => (
-            <motion.div
+      <section hidden={!content.direction.enabled} className="relative w-full max-w-5xl mx-auto px-4 z-10 mb-16 md:mb-20 flex flex-col md:flex-row justify-center gap-10 md:gap-16">
+          {withContentIcons(content.direction.items).map((item, index) => ({...item, text:item.description, rotation: index % 2 ? "rotate-3" : "-rotate-2"})).map((item, i) => (
+            <Motion.div
               key={item.title}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              whileHover={{ scale: 1.05, rotate: "0deg", zIndex: 20 }}
-              className={`flex-1 p-8 md:p-12 bg-white shadow-[0_15px_30px_-10px_rgba(0,0,0,0.15)] border-t-[12px] border-black relative cursor-pointer ${item.rotation} transition-all duration-300`}
+              whileHover={{ scale: 1.015, rotate: "0deg", zIndex: 20 }}
+              className={`flex-1 p-8 md:p-12 bg-white shadow-[0_15px_30px_-10px_rgba(0,0,0,0.15)] border-t-[12px] border-black relative  ${item.rotation} transition-all duration-300`}
             >
               <div className="absolute top-4 right-4 text-black/10">
                 <item.icon size={48} />
@@ -88,25 +88,25 @@ export default function About() {
               <p className="text-sm md:text-base leading-relaxed text-black/70 font-semibold">
                 {item.text}
               </p>
-            </motion.div>
+            </Motion.div>
           ))}
       </section>
 
       {/* ──── CORE VALUES (Tags) ──── */}
-      <section className="relative w-full max-w-7xl mx-auto px-4 z-10 mb-32 text-center">
-         <h2 className="text-xs font-black uppercase tracking-[0.4em] text-black/30 mb-16 border-b-2 border-dashed border-black/10 pb-4 inline-block">Our Core Values</h2>
+      <section hidden={!content.values.enabled} className="relative w-full max-w-7xl mx-auto px-4 z-10 mb-16 md:mb-20 text-center">
+         <h2 className="text-xs font-black uppercase tracking-[0.4em] text-black/30 mb-16 border-b-2 border-dashed border-black/10 pb-4 inline-block">{content.values.title}</h2>
          <div className="flex flex-wrap justify-center gap-8 md:gap-12">
           {aboutData.values.map((v, i) => {
             const rotationClass = rotations[i % rotations.length];
             return (
-              <motion.div
+              <Motion.div
                 key={v.title}
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: 0.96 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1, type: "spring" }}
-                whileHover={{ rotate: "0deg", translateY: -10, zIndex: 30 }}
-                className={`relative bg-[#eaeaea] p-8 pb-12 w-[240px] md:w-[280px] text-center shadow-lg border border-black/5 ${rotationClass} cursor-pointer transition-all duration-300 flex flex-col items-center`}
+                whileHover={{ rotate: "0deg", translateY: -4, zIndex: 30 }}
+                className={`relative bg-[#eaeaea] p-8 pb-12 w-[240px] md:w-[280px] text-center shadow-lg border border-black/5 ${rotationClass}  transition-all duration-300 flex flex-col items-center`}
               >
                 {/* Hole punch and string */}
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#e6e4dc] shadow-[inset_0_3px_6px_rgba(0,0,0,0.1)] border border-black/10 z-20 flex items-center justify-center">
@@ -116,15 +116,15 @@ export default function About() {
                 <div className="text-4xl mb-6 text-black mt-4"><v.icon /></div>
                 <h3 className="text-xl font-black mb-3 text-black tracking-tight">{v.title}</h3>
                 <p className="text-xs font-bold leading-relaxed text-black/50">{v.description}</p>
-              </motion.div>
+              </Motion.div>
             );
           })}
         </div>
       </section>
 
       {/* ──── WHY JOIN (Checklist Notepad) ──── */}
-      <section className="relative w-full max-w-2xl mx-auto px-4 z-10">
-         <motion.div
+      <section hidden={!content.whyJoin.enabled} className="relative w-full max-w-2xl mx-auto px-4 z-10">
+         <Motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -135,7 +135,7 @@ export default function About() {
             <div className="absolute top-0 left-12 w-0.5 h-full bg-black/10" />
             
             <h2 className="text-2xl md:text-3xl font-black uppercase tracking-widest text-black mb-6 font-serif underline decoration-4 decoration-black/10 pl-16">
-               Why Join Us?
+               {content.whyJoin.title}
             </h2>
             <div className="space-y-6 pl-16 relative z-10 mt-8">
               {aboutData.whyJoin.map((item, i) => (
@@ -145,7 +145,7 @@ export default function About() {
                 </div>
               ))}
             </div>
-         </motion.div>
+         </Motion.div>
       </section>
 
     </div>

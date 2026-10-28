@@ -1,14 +1,19 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import { HiMenuAlt3, HiX } from "react-icons/hi";
-import { navLinks } from "../data/siteData";
-import cclogo from "../assets/cc_logo.png";
+import { usePageContent } from "../hooks/usePageContent";
+
+
+
 
 export default function Navbar() {
+  const content = usePageContent("shared").navigation;
+  const navLinks = content.links.filter(link => link.path !== "/contact");
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [mobilePath, setMobilePath] = useState(null);
   const location = useLocation();
+  const isMobileOpen = mobilePath === location.pathname;
 
   const handleNavClick = (isActive) => {
     if (isActive) {
@@ -22,13 +27,10 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    setIsMobileOpen(false);
-  }, [location]);
 
   return (
     <>
-      <motion.nav
+      <Motion.nav
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
@@ -44,7 +46,7 @@ export default function Navbar() {
               className="group flex items-center gap-3"
             >
               <span className="text-xl md:text-2xl font-black tracking-[-0.03em] text-black font-serif transition-opacity group-hover:opacity-70">
-                <img src={cclogo} alt="CC Logo" className="w-32" />
+                <img src={content.logo} alt={content.logoAlt} className="w-32" />
               </span>
             </Link>
 
@@ -66,7 +68,7 @@ export default function Navbar() {
                         {link.name}
                       </span>
                       {isActive && (
-                        <motion.div
+                        <Motion.div
                           layoutId="nav-indicator-desktop"
                           className="absolute -bottom-[6px] left-0 right-0 h-[3px] bg-[#a0b4d4]"
                           transition={{ type: "spring", stiffness: 400, damping: 30 }}
@@ -79,17 +81,17 @@ export default function Navbar() {
               
               {/* Minimal Action Button */}
               <Link 
-                to="/contact" 
+                to={content.joinLink}
                 className="ml-4 px-5 py-2 bg-transparent text-black text-[11px] font-black uppercase tracking-widest border-2 border-black hover:bg-[#f0e3dc] transition-all shadow-[2px_2px_0px_#2b2a27] hover:shadow-[0px_0px_0px_#2b2a27] hover:translate-x-[2px] hover:translate-y-[2px]"
               >
-                 Join Us
+                 {content.joinLabel}
               </Link>
             </div>
 
             {/* Mobile Toggle */}
             <div className="md:hidden flex items-center gap-2">
               <button
-                onClick={() => setIsMobileOpen(!isMobileOpen)}
+                onClick={() => setMobilePath(isMobileOpen ? null : location.pathname)}
                 className="w-10 h-10 flex items-center justify-center text-black/70 hover:text-black transition-colors"
                 aria-label="Toggle menu"
               >
@@ -101,7 +103,7 @@ export default function Navbar() {
         {/* Mobile Menu */}
         <AnimatePresence>
           {isMobileOpen && (
-            <motion.div
+            <Motion.div
               initial={{ opacity: 0, y: -20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -112,7 +114,7 @@ export default function Navbar() {
                 {navLinks.map((link, i) => {
                   const isActive = location.pathname === link.path;
                   return (
-                    <motion.div
+                    <Motion.div
                       key={link.name}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -127,28 +129,28 @@ export default function Navbar() {
                       >
                         {link.name}
                       </Link>
-                    </motion.div>
+                    </Motion.div>
                   );
                 })}
                 
-                <motion.div
+                <Motion.div
                    initial={{ opacity: 0, x: -10 }}
                    animate={{ opacity: 1, x: 0 }}
                    transition={{ delay: navLinks.length * 0.05 }}
                    className="mt-6 pt-6 border-t border-black/10"
                 >
                    <Link
-                      to="/contact"
+                      to={content.joinLink}
                       className="inline-flex items-center justify-center w-full px-6 py-4 bg-white border-2 border-black text-black font-black uppercase tracking-widest text-sm shadow-[4px_4px_0px_#2b2a27] active:scale-95 transition-transform"
                    >
-                     Join Us
+                     {content.joinLabel}
                    </Link>
-                </motion.div>
+                </Motion.div>
               </div>
-            </motion.div>
+            </Motion.div>
           )}
         </AnimatePresence>
-      </motion.nav>
+      </Motion.nav>
     </>
   );
 }

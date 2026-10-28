@@ -1,8 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
-import { socialLinks } from "../data/siteData";
+import { motion as Motion } from "framer-motion";
+import { usePageContent } from "../hooks/usePageContent";
+import { withContentIcons } from "../lib/contentIcons";
 
 export default function Footer() {
+  const shared = usePageContent("shared");
+  const content = shared.footer;
+  const socialLinks = withContentIcons(shared.social.items);
   const currentYear = new Date().getFullYear();
   const location = useLocation();
 
@@ -19,7 +23,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="w-full bg-[#f5f3eb] border-t-2 border-dashed border-black mt-32 relative overflow-hidden">
+    <footer hidden={!content.enabled} className={`w-full bg-[#f5f3eb] border-t-2 border-dashed border-black ${location.pathname === "/events" ? "mt-8" : "mt-32"} relative overflow-hidden`}>
       
       {/* Tape Decoration */}
       <div className="absolute top-0 right-12 w-24 h-8 bg-[#e6dcf0]/90 border border-black/10 -translate-y-4 rotate-3 pointer-events-none" />
@@ -32,7 +36,7 @@ export default function Footer() {
           <div className="w-full md:w-5/12 flex flex-col justify-between">
             <div>
               <div className="inline-flex items-center gap-2 font-mono text-[10px] font-black uppercase tracking-widest bg-black text-white px-2 py-1 mb-6">
-                 SYS.FOOTER // REGISTRY
+                 {content.eyebrow}
               </div>
               <Link
                 to="/"
@@ -40,17 +44,17 @@ export default function Footer() {
                 className="inline-block mb-4 group"
               >
                 <span className="text-3xl md:text-5xl font-black text-black font-serif uppercase tracking-tighter transition-colors duration-200">
-                  CodeCrafters.
+                  {content.brand}
                 </span>
               </Link>
               <p className="text-sm md:text-base leading-relaxed text-black/80 font-mono font-medium max-w-sm pl-4 border-l-[3px] border-black/20">
-                Building a culture of code & collaboration. A vibrant club of 1500+ members forging the future of software.
+                {content.description}
               </p>
             </div>
             
             <div className="mt-10">
               <span className="text-[10px] font-bold tracking-widest uppercase font-mono text-black/30">
-                [CC-EST-202X]
+                {content.stamp}
               </span>
             </div>
           </div>
@@ -61,16 +65,10 @@ export default function Footer() {
             {/* Links */}
             <div className="w-full sm:w-1/2 flex flex-col">
               <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-6 text-black border-b-[3px] border-black inline-block pb-2 w-fit">
-                Directory
+                {content.directoryTitle}
               </h3>
               <ul className="flex flex-col gap-4">
-                {[
-                  { name: "Home", path: "/" },
-                  { name: "About", path: "/about" },
-                  { name: "Events", path: "/events" },
-                  { name: "Team", path: "/team" },
-                  { name: "Contact", path: "/contact" },
-                ].map((link) => (
+                {shared.navigation.links.map((link) => (
                   <li key={link.name}>
                     <Link
                       to={link.path}
@@ -88,13 +86,13 @@ export default function Footer() {
             {/* Comms */}
             <div className="w-full sm:w-1/2 flex flex-col">
               <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-6 text-black border-b-[3px] border-black inline-block pb-2 w-fit">
-                Network
+                {content.networkTitle}
               </h3>
               
               {/* Social Grid */}
               <div className="grid grid-cols-4 gap-3 mb-8 w-fit">
                 {socialLinks.map((social, index) => (
-                  <motion.a
+                  <Motion.a
                     key={social.name}
                     href={social.url}
                     target="_blank"
@@ -105,7 +103,7 @@ export default function Footer() {
                     aria-label={social.name}
                   >
                     <social.icon size={18} />
-                  </motion.a>
+                  </Motion.a>
                 ))}
               </div>
 
@@ -120,7 +118,7 @@ export default function Footer() {
                   </div>
                   <div className="flex justify-between items-center pt-1">
                     <span>MEMBERS:</span>
-                    <span className="text-black">1.5K+</span>
+                    <span className="text-black">{content.members}</span>
                   </div>
                 </div>
               </div>
@@ -131,8 +129,8 @@ export default function Footer() {
 
         {/* Bottom copyright line */}
         <div className="mt-20 pt-6 border-t-2 border-black flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] font-mono font-bold uppercase tracking-widest text-black/50">
-          <span>© {currentYear} CodeCrafters.</span>
-          <span>Engineered with intent.</span>
+          <span>© {currentYear} {content.copyright}</span>
+          <span>{content.tagline}</span>
         </div>
       </div>
     </footer>

@@ -1,6 +1,8 @@
+import { useReducedMotion } from "framer-motion";
 import { useCallback, useEffect, useRef } from "react";
 
 export default function ParticleBackground() {
+  const reducedMotion = useReducedMotion();
   const canvasRef = useRef(null);
   const theme = "light";
   const animationRef = useRef(null);
@@ -24,7 +26,7 @@ export default function ParticleBackground() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || reducedMotion) return;
 
     const ctx = canvas.getContext("2d");
     const resize = () => {
@@ -76,7 +78,7 @@ export default function ParticleBackground() {
       window.removeEventListener("resize", resize);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [theme, initParticles]);
+  }, [theme, initParticles, reducedMotion]);
 
   return (
     <canvas

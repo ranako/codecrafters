@@ -28,6 +28,10 @@ function mapUpcomingEvent(row) {
     title: row.title || "",
     description: row.description || "",
     category: row.category || "",
+    registration_url: row.registration_url || "",
+    starts_at: row.starts_at || "",
+    ends_at: row.ends_at || "",
+    status_override: row.status_override || "",
     date: row.event_date || "",
     time: row.event_time || "",
     location: row.location || "",
@@ -71,6 +75,8 @@ function mapPastEventAlbum(row) {
     date: row.event_date || "",
     description: row.description || "",
     coverImage: row.cover_image_url || "",
+    event_id: row.event_id || "",
+    photo_captions: row.photo_captions && typeof row.photo_captions === "object" && !Array.isArray(row.photo_captions) ? row.photo_captions : {},
     photos: Array.isArray(row.photos) ? row.photos : [],
     sort_order: row.sort_order ?? 0,
     is_published: row.is_published ?? true,
@@ -104,6 +110,10 @@ export async function saveUpcomingEvents(items) {
     title: item.title?.trim() || "",
     description: item.description?.trim() || "",
     category: item.category?.trim() || "",
+    registration_url: item.registration_url?.trim() || null,
+    starts_at: item.starts_at || null,
+    ends_at: item.ends_at || null,
+    status_override: item.status_override || null,
     event_date: item.date?.trim() || "",
     event_time: item.time?.trim() || "",
     location: item.location?.trim() || "",
@@ -206,6 +216,8 @@ export async function savePastEventAlbums(items) {
     event_date: item.date?.trim() || "",
     description: item.description?.trim() || "",
     cover_image_url: item.coverImage?.trim() || "",
+    event_id: item.event_id || null,
+    photo_captions: Object.fromEntries((item.photos || []).filter(Boolean).map((url) => [url, String(item.photo_captions?.[url] || "")])),
     photos: Array.isArray(item.photos) ? item.photos : [],
     sort_order: index,
     is_published: item.is_published ?? true,
@@ -220,3 +232,6 @@ export async function deletePastEventAlbums(ids) {
   if (!ids.length) return;
   await runQuery(supabase.from("past_event_albums").delete().in("id", ids));
 }
+
+// The historical table name is retained to preserve existing IDs and RLS.
+export const fetchEvents = fetchUpcomingEvents;

@@ -21,3 +21,131 @@ Add the same environment variables in your Vercel project settings before deploy
 - `VITE_SUPABASE_STORAGE_BUCKET`
 
 After updating Vercel env vars, redeploy the project so the client build picks them up.
+
+## Community content
+
+The existing admin modules manage publication with `is_published` (events,
+albums, testimonials) and `is_active` (core members). Save with **Publish
+Changes** to persist a toggle. Public pages fetch published content when opened
+or refreshed. Club Life uses the same published albums as the Events page;
+no separate gallery content needs maintaining.
+
+Events accept an optional `registration_url` text column in `upcoming_events`
+(the column was added separately in Supabase). Only complete HTTP/HTTPS links
+are accepted. An absent link displays "Registration not open" and never creates
+a registration or claims an RSVP was saved. Registration happens on the linked
+service. Existing records may leave this column null.
+
+For countdowns, enter the date as `YYYY-MM-DD` and start time as `HH:mm` in India
+time. An explicit offset is supported, for example `14:30 +00:00` for UTC.
+Legacy dates or descriptive time strings remain visible but do not produce an
+inaccurate countdown. No upcoming event is required to use the site.
+
+Album viewers support Previous/Next, arrow keys, Escape, focus restoration, and
+manual photo navigation. Reduced motion disables the cursor accent and looping
+testimonials; desktop album scrolling becomes a manually scrollable row.
+
+The existing RLS policies grant management to all authenticated users. These
+changes preserve that policy; they do not introduce an administrator allowlist.
+Authenticated create/edit/publish/delete and Storage operations need verification
+with an authorized admin account. Do not use production records as disposable
+fixtures.
+
+Validation: `npm run build`, `npm run lint`. This JavaScript project currently has
+no separate type-check or automated-test script. Existing lint failures include
+Framer Motion JSX being reported as unused imports and existing hook rules.
+
+## Event schedule and gallery
+
+The **Events** admin module manages every event using the historical
+`upcoming_events` table. Start and end inputs use India time and persist UTC
+`starts_at` / `ends_at` timestamps. An end after the start is required when
+saving an event. The existing date/time text fields are retained for compatibility.
+
+Choose **Automatic from schedule** for upcoming → live → past transitions.
+Public Home and Events views recompute status every second while open; this is
+computed presentation, not a database job. Manual Upcoming, Live, or Past overrides
+persist until switched back to Automatic. Existing undated records appear under
+"Schedule to be confirmed" rather than being assigned invented times. Home shows
+separate Live and Upcoming sections; Events also lists Past events.
+
+Save an event before using **Add event album**, or choose a **Linked event**
+in Photo Album. Standalone albums remain supported. Add searchable captions beside
+each photo. Gallery at `/gallery` searches captions, album titles/descriptions,
+event titles, dates, and filenames and can filter by linked event. Only published
+content is fetched publicly. Deleting an event leaves its albums as standalone
+albums through the verified foreign key's `ON DELETE SET NULL` behavior.
+
+Database fields were added through `supabase/event-lifecycle-and-gallery.sql` and
+verified by the owner. No RLS policy changes were made. Run the scheduling/search
+checks with `node --test tests/eventUtils.test.js`.
+
+## Appearance settings
+
+Admin > **Appearance** saves the public carousel and event-card settings in
+`site_presentation_settings`. The owner verified its policies, and the public
+`key,value` query was checked before integrating it. Existing event/album RLS
+policies are unchanged.
+
+Carousel controls include visibility, title, loop duration (15–120 seconds),
+first-row direction, hover pause, included albums, and individual photo selection.
+Unchecked album/photo lists mean all eligible published content. Individual photos
+play in selection order. Removed or unpublished photos cannot appear through a
+saved selection. Preview selections locally, then choose **Save appearance**.
+
+Event cards offer Scrapbook ticket, Editorial, or Minimal styles with Tilt and
+lift, Gentle lift, or No animation. Reduced-motion preferences override animation.
+Home keeps its distinct spotlight for the next upcoming event. Event details use
+a larger native dialog with a blurred backdrop, fixed-page scroll lock, Escape,
+and focus/scroll restoration. Admin's **Preview event** supports unsaved drafts.
+
+Saved appearance changes reload in the current page and other open local tabs.
+Other visitors receive them when opening or focusing a page. Settings have safe
+visual defaults if a public fetch fails; admin load/save failures are shown and
+failed loads cannot overwrite settings.
+
+Run checks: `node --test tests/eventUtils.test.js tests/presentationUtils.test.js`.
+
+## Page-by-page content management
+
+The admin now starts with Home, About, Events, Gallery, Team, Contact, and
+Navigation & footer. Choose **Page content** for headings, descriptions, buttons,
+links, repeated items, icons, images and section visibility. Existing collection
+editors remain underneath their relevant pages: events/albums/testimonials on
+Home, events/albums on Events, albums on Gallery, and core members on Team.
+These collections are shared, so an album edit also changes Home and Gallery.
+Original team members are now editable in Team > Page content > Original team.
+
+### One-time database setup
+
+Run `supabase/page-content.sql` in this project's Supabase SQL Editor. It creates
+`site_page_content` with public reads and authenticated insert/update permissions,
+matching the existing CMS authorization model. No existing content or policies
+are overwritten. There are no seed rows: missing page rows use the current site
+content. The migration is idempotent and can be rerun.
+
+Until this table exists, public pages retain their current content and the admin
+shows the setup message with editing disabled. Do not put a service-role key in
+the frontend. The SQL migration needs to be applied separately by the project
+owner; local development does not install it automatically.
+
+**Save page** publishes only the selected page. Draft edits and uploaded image
+references are not published until saving. **Discard changes** restores the last
+loaded/saved copy. **Load original content into draft** prepares the built-in
+content without publishing it. Page switching warns about unsaved changes;
+switching and saving are blocked during uploads. There are keyboard-accessible
+up/down controls to reorder list items. Uploads use the existing storage bucket
+under `pages/` and are not automatically deleted, because images can be shared.
+
+Public pages listen for successful saves in the same window, other local tabs,
+and when the window is focused. Other visitors receive the published values on
+load or focus. Failed requests keep the existing public defaults; failed editor
+loads cannot overwrite saved content. Button links accept site paths, anchors,
+and HTTP/HTTPS destinations; executable URLs are rejected. EmailJS service IDs
+and keys remain deployment configuration rather than editable public content.
+
+Validation: `node --test tests/pageContentUtils.test.js tests/eventUtils.test.js
+tests/presentationUtils.test.js`. Page editors and public rendering were also
+checked with isolated browser fixtures, including saves/reloads, failed writes,
+missing migration, unsaved drafts, URL validation and visibility. These checks do
+not replace a live authenticated save after applying the database migration.

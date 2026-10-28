@@ -1,8 +1,9 @@
 // Postcard layout Contact page
 import { useState } from "react";
 import emailjs from "@emailjs/browser";
-import { motion } from "framer-motion";
-import { contactData, socialLinks } from "../data/siteData";
+import { motion as Motion } from "framer-motion";
+import { usePageContent } from "../hooks/usePageContent";
+import { withContentIcons } from "../lib/contentIcons";
 import { FaPaperPlane } from "react-icons/fa";
 
 const emailJsPublicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
@@ -10,6 +11,9 @@ const emailJsServiceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
 const emailJsTemplateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
 
 export default function Contact() {
+  const content = usePageContent("contact");
+  const contactData = { email: content.delivery.email, tagline: content.postcard.title };
+  const socialLinks = withContentIcons(usePageContent("shared").social.items);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState({ type: "", message: "" });
@@ -20,7 +24,7 @@ export default function Contact() {
     if (!emailJsPublicKey || !emailJsServiceId || !emailJsTemplateId) {
       setStatus({
         type: "error",
-        message: "Email service is not configured yet. Add the EmailJS keys in your .env file.",
+        message: "The contact form is unavailable. Please email us directly using the address on this postcard.",
       });
       return;
     }
@@ -46,13 +50,13 @@ export default function Contact() {
 
       setStatus({
         type: "success",
-        message: "Postcard sent successfully. We'll get back to you soon!",
+        message: content.postcard.successMessage,
       });
       setForm({ name: "", email: "", message: "" });
-    } catch (error) {
+    } catch {
       setStatus({
         type: "error",
-        message: "Could not send the postcard. Verify your EmailJS IDs and template variables.",
+        message: "Your postcard could not be sent. Please try again or email us directly.",
       });
     } finally {
       setIsSubmitting(false);
@@ -60,7 +64,7 @@ export default function Contact() {
   };
 
   return (
-    <div className="py-20 min-h-[80vh] w-full bg-[#e6e4dc] relative overflow-hidden flex flex-col items-center">
+    <div className="contact-polish pt-28 pb-12 px-6 min-h-[80vh] w-full bg-[#e6e4dc] relative overflow-hidden flex flex-col items-center">
       {/* Desk Texture */}
       <div 
          className="absolute inset-0 opacity-[0.05] pointer-events-none" 
@@ -68,16 +72,16 @@ export default function Contact() {
       />
 
       {/* The Postcard */}
-      <motion.div
-         initial={{ opacity: 0, scale: 0.9, y: 50, rotate: "2deg" }}
+      <Motion.div
+         initial={{ opacity: 0, scale: 0.9, y: 16, rotate: "2deg" }}
          animate={{ opacity: 1, scale: 1, y: 0, rotate: "-1deg" }}
-         transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
+         transition={{ duration: 0.4, type: "spring", bounce: 0.1 }}
          className="relative w-full max-w-5xl bg-[#fffef5] border border-black/10 shadow-[0_25px_50px_-15px_rgba(0,0,0,0.2)] flex flex-col md:flex-row p-8 md:p-14 z-10"
       >
         {/* Postcard Stamp - Lilac Accent */}
         <div className="absolute top-8 right-8 w-20 h-24 flex items-center justify-center rotate-[15deg] pointer-events-none z-30">
            <div className="w-16 h-20 bg-[#ba9ed1] text-black font-serif flex items-center justify-center text-[10px] text-center p-1 border border-black/20 shadow-sm" style={{ clipPath: "polygon(5% 0%, 95% 0%, 100% 5%, 100% 95%, 95% 100%, 5% 100%, 0% 95%, 0% 5%)" }}>
-             Express<br/>Mail
+             <span style={{ whiteSpace: "pre-line" }}>{content.postcard.stamp}</span>
            </div>
            <div className="absolute inset-0 border-[3px] border-black/20 rounded-full w-24 h-24 -left-2 -top-2" style={{ clipPath: "polygon(0 0, 50% 0, 50% 100%, 0 100%)" }} />
            <div className="absolute inset-0 border-[3px] border-black/20 rounded-full w-20 h-20 left-0 top-0" style={{ clipPath: "polygon(0 0, 50% 0, 50% 100%, 0 100%)" }} />
@@ -85,43 +89,49 @@ export default function Contact() {
 
         {/* Left Side: Form (The Message side of postcard) */}
         <div className="w-full md:w-1/2 md:pr-14 md:border-r-[3px] border-double border-black/10 relative z-20">
-           <h2 className="text-4xl font-black font-serif text-black mb-8">
+           <h1 className="text-4xl font-black font-serif text-black mb-8">
              {contactData.tagline}
-           </h2>
+           </h1>
 
            <form onSubmit={handleSubmit} className="space-y-6">
              <div className="relative border-b-2 border-black/10 pb-2">
-               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 block mb-1">
-                 From: (Name)
+               <label htmlFor="contact-name" className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 block mb-1">
+                 {content.postcard.nameLabel}
                </label>
                <input
                  type="text"
+                 id="contact-name"
+                 name="name"
+                 autoComplete="name"
                  required
                  value={form.name}
                  onChange={(e) => setForm({ ...form, name: e.target.value })}
                  className="w-full bg-transparent text-xl font-serif italic text-black outline-none placeholder:text-black/10"
-                 placeholder="John Doe"
+                 placeholder={content.postcard.namePlaceholder}
                />
              </div>
 
              <div className="relative border-b-2 border-black/10 pb-2">
-               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 block mb-1">
-                 Return Address: (Email)
+               <label htmlFor="contact-email" className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 block mb-1">
+                 {content.postcard.emailLabel}
                </label>
                <input
                  type="email"
+                 id="contact-email"
+                 name="email"
+                 autoComplete="email"
                  required
                  value={form.email}
                  onChange={(e) => setForm({ ...form, email: e.target.value })}
                  className="w-full bg-transparent text-lg font-mono text-black outline-none placeholder:text-black/10"
-                 placeholder="john@example.com"
+                 placeholder={content.postcard.emailPlaceholder}
                />
              </div>
 
              {/* Message utilizes lined paper background */}
              <div className="relative pt-2">
-               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 block mb-2">
-                 Message:
+               <label htmlFor="contact-message" className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 block mb-2">
+                 {content.postcard.messageLabel}
                </label>
                <div className="relative">
                  {/* Lined paper effect */}
@@ -129,10 +139,13 @@ export default function Contact() {
                  <textarea
                    required
                    rows={5}
+                   maxLength={5000}
+                 id="contact-message"
+                 name="message"
                    value={form.message}
                    onChange={(e) => setForm({ ...form, message: e.target.value })}
                    className="w-full bg-transparent text-xl font-serif text-black outline-none resize-none placeholder:text-black/20 leading-[2.5rem]"
-                   placeholder="Write your note here..."
+                   placeholder={content.postcard.messagePlaceholder}
                  />
                </div>
              </div>
@@ -142,11 +155,12 @@ export default function Contact() {
                disabled={isSubmitting}
                className="mt-8 px-8 py-4 bg-black text-white font-black uppercase tracking-[0.2em] text-sm hover:scale-105 active:scale-95 transition-all shadow-[6px_6px_0px_#ccc] hover:shadow-[2px_2px_0px_#ccc] w-full border border-black flex items-center justify-center gap-3 hover:bg-[#a3b18a] hover:text-black disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:scale-100"
              >
-               {isSubmitting ? "Sending..." : <> Drop in Mailbox <FaPaperPlane className="text-xs" /></>}
+               {isSubmitting ? "Sending..." : <> {content.postcard.submitLabel} <FaPaperPlane className="text-xs" /></>}
              </button>
 
              {status.message ? (
                <p
+                 role={status.type === "error" ? "alert" : "status"}
                  className={`text-sm font-semibold ${
                    status.type === "success" ? "text-green-700" : "text-red-700"
                  }`}
@@ -162,22 +176,23 @@ export default function Contact() {
            
            <div className="space-y-12">
              <div className="border-b-2 border-black/20 pb-2 flex flex-col items-end text-right">
-                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30">Deliver To:</span>
-                <h3 className="text-3xl font-black font-serif text-black mt-2">The CodeCrafters Desk</h3>
-                <p className="text-sm font-bold text-black/50 font-sans mt-2 uppercase tracking-widest">Student Tech Club Room</p>
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30">{content.delivery.toLabel}</span>
+                <h3 className="text-3xl font-black font-serif text-black mt-2">{content.delivery.to}</h3>
+                <p className="text-sm font-bold text-black/50 font-sans mt-2 uppercase tracking-widest">{content.delivery.room}</p>
              </div>
              
              <div className="border-b-2 border-black/20 pb-2 flex flex-col items-end text-right">
-                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30">Digital Inbox:</span>
-                <p className="text-xl font-bold font-mono text-black mt-2 bg-[#dce4f0] border-[2px] border-black shadow-[3px_3px_0px_#2b2a27] px-2 py-1 transform rotate-1">{contactData.email}</p>
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30">{content.delivery.inboxLabel}</span>
+                <a href={`mailto:${contactData.email}`} className="contact-email text-xl font-bold font-mono text-black mt-2 bg-[#dce4f0] border-[2px] border-black shadow-[3px_3px_0px_#2b2a27] px-2 py-1 transform rotate-1">{contactData.email}</a>
              </div>
 
              <div className="pb-2 flex flex-col items-end text-right">
-                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30">Connect Details:</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30">{content.delivery.socialLabel}</span>
                 <div className="flex gap-4 mt-4">
                   {socialLinks.map((s) => (
                     <a
                       key={s.name}
+                      aria-label={`${s.name} (opens in a new tab)`}
                       href={s.url}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -195,7 +210,7 @@ export default function Contact() {
 
         </div>
 
-      </motion.div>
+      </Motion.div>
     </div>
   );
 }

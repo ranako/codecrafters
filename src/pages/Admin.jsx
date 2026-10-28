@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import {
   FaCalendarAlt,
   FaUsers,
@@ -47,8 +47,14 @@ import {
   supabase,
 } from "../lib/supabase";
 
+import PageContentEditor from "../components/PageContentEditor";
+import { pageSchemas } from "../lib/pageContentSchema";
+import PresentationManager from "../components/PresentationManager";
+import EventModal from "../components/EventModal";
+import { registrationUrl, eventStatus, indiaDateTime, fromIndiaDateTime } from "../lib/eventUtils";
+
 const TABS = [
-  { id: "upcoming", label: "Upcoming Events", icon: FaCalendarAlt },
+  { id: "upcoming", label: "Events", icon: FaCalendarAlt },
   { id: "team", label: "Core Members", icon: FaUsers },
   { id: "album", label: "Photo Album", icon: FaCameraRetro },
   { id: "testimonials", label: "Testimonials", icon: FaQuoteLeft },
@@ -60,6 +66,10 @@ const EMPTY_ITEMS = {
     description: "",
     date: "",
     category: "",
+    registration_url: "",
+    starts_at: "",
+    ends_at: "",
+    status_override: "",
     image: "",
     location: "",
     time: "",
@@ -79,6 +89,8 @@ const EMPTY_ITEMS = {
     date: "",
     description: "",
     coverImage: "",
+    event_id: "",
+    photo_captions: {},
     photos: [],
     is_published: true,
   },
@@ -202,7 +214,17 @@ export default function Admin() {
   const [loginError, setLoginError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const [activeTab, setActiveTab] = useState(TABS[0]);
+  const [previewEvent, setPreviewEvent] = useState(null);
+  const pendingAlbumEvent = useRef("");
+  const [clock, setClock] = useState(Date.now);
+  const [eventOptions, setEventOptions] = useState([]);
+  const [activePage, setActivePage] = useState("home");
+  const [activeTab, setActiveTab] = useState({ id: "page", label: "Page content" });
+  const [hasLoadedTab, setHasLoadedTab] = useState(false);
+  const pageDirty = useRef(false);
+  const pageBusy = useRef(false);
+  const onPageBusyChange = useCallback((busy) => { pageBusy.current = busy; }, []);
+  const onPageDirtyChange = useCallback((dirty) => { pageDirty.current = dirty; }, []);
   const [formData, setFormData] = useState([]);
   const [initialSnapshot, setInitialSnapshot] = useState([]);
   const [initialIds, setInitialIds] = useState([]);
@@ -213,6 +235,16 @@ export default function Admin() {
   const [draggedCardIndex, setDraggedCardIndex] = useState(null);
   const [draggedPhoto, setDraggedPhoto] = useState(null);
   const [uploadingTarget, setUploadingTarget] = useState("");
+
+  const selectEditor = (tab, page = activePage) => {
+    if (isSaving || uploadingTarget || pageBusy.current) return;
+    if (tab.id === activeTab.id && page === activePage) return;
+    const dirty = pageDirty.current || (TABS.some(item => item.id === activeTab.id) && JSON.stringify(formData) !== JSON.stringify(initialSnapshot));
+    if (dirty && !window.confirm("You have unsaved changes. Discard them and switch sections?")) return;
+    pageDirty.current = false;
+    setActivePage(page);
+    setActiveTab(tab);
+  };
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -256,6 +288,20 @@ export default function Admin() {
   }, []);
 
   useEffect(() => {
+    if (!session) return;
+    const timer = setInterval(() => setClock(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [session]);
+
+  useEffect(() => {
+    if (!session) return;
+    let active = true;
+    fetchUpcomingEvents({ admin: true }).then((events) => { if (active) setEventOptions(events); })
+      .catch(() => { if (active) setEventOptions([]); });
+    return () => { active = false; };
+  }, [session, activeTab]);
+
+  useEffect(() => {
     if (!session) {
       setFormData([]);
       setInitialSnapshot([]);
@@ -263,19 +309,28 @@ export default function Admin() {
       return;
     }
 
+    if (!TABS.some(tab => tab.id === activeTab.id)) return;
     let isMounted = true;
 
     async function loadTab() {
       setIsLoadingTab(true);
+      setHasLoadedTab(false);
       setTabError("");
       setSuccess("");
 
       try {
         const data = await fetchByTab(activeTab.id);
         if (!isMounted) return;
-        setFormData(cloneData(data));
+        const pendingEventId = activeTab.id === "album" ? pendingAlbumEvent.current : "";
+        if (pendingEventId) {
+          setFormData([...cloneData(data), { ...EMPTY_ITEMS.album, id: createTempId(), event_id: pendingEventId }]);
+          pendingAlbumEvent.current = "";
+        } else {
+          setFormData(cloneData(data));
+        }
         setInitialSnapshot(cloneData(data));
         setInitialIds(getPersistedIds(data));
+        setHasLoadedTab(true);
         setDraggedCardIndex(null);
         setDraggedPhoto(null);
       } catch (error) {
@@ -324,17 +379,35 @@ export default function Admin() {
   };
 
   const handleLogout = async () => {
+    if (isSaving || uploadingTarget || pageBusy.current) return;
+    if (pageDirty.current || JSON.stringify(formData) !== JSON.stringify(initialSnapshot)) { if (!window.confirm("Discard unsaved changes and sign out?")) return; }
     await supabase.auth.signOut();
     setSuccess("");
     setTabError("");
   };
 
   const handleSave = async () => {
+    if (!hasLoadedTab || isSaving || uploadingTarget) return;
     setIsSaving(true);
     setTabError("");
     setSuccess("");
 
     try {
+      for (const item of formData) {
+        if (!(activeTab.id === "team" ? item.name : activeTab.id === "testimonials" ? item.name : item.title)?.trim()) {
+          throw new Error("Each item needs a name or title before saving.");
+        }
+        if (activeTab.id === "upcoming") {
+          const start = Date.parse(item.starts_at || "");
+          const end = Date.parse(item.ends_at || "");
+          if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+            throw new Error(`Set a start and end date/time for "${item.title}". The end must be after the start.`);
+          }
+        }
+        if (activeTab.id === "upcoming" && item.registration_url?.trim() && !registrationUrl(item.registration_url.trim())) {
+          throw new Error("Registration URL must be a complete http:// or https:// link.");
+        }
+      }
       const deletedIds = initialIds.filter(
         (id) =>
           !formData.some(
@@ -385,6 +458,7 @@ export default function Admin() {
       setFormData(cloneData(data));
       setInitialSnapshot(cloneData(data));
       setInitialIds(getPersistedIds(data));
+      setHasLoadedTab(true);
     } catch (error) {
       setTabError(error.message || "Unable to reset this section.");
     } finally {
@@ -423,8 +497,11 @@ export default function Admin() {
         if (index !== itemIndex) return item;
 
         const nextPhotos = [...(item.photos || [])];
+        const previousUrl = nextPhotos[photoIndex];
         nextPhotos[photoIndex] = value;
-        return { ...item, photos: nextPhotos };
+        const captions = { ...item.photo_captions };
+        if (previousUrl && value && previousUrl !== value && captions[previousUrl] && !captions[value]) captions[value] = captions[previousUrl];
+        return { ...item, photos: nextPhotos, photo_captions: captions };
       }),
     );
   };
@@ -513,6 +590,7 @@ export default function Admin() {
       </label>
       {isTextArea ? (
         <textarea
+          aria-label={label}
           value={value || ""}
           onChange={(event) => onChange(event.target.value)}
           className="w-full bg-black/5 border-2 border-transparent focus:border-black rounded-lg px-4 py-3 text-sm text-black transition-colors min-h-[100px] resize-y outline-none"
@@ -520,6 +598,7 @@ export default function Admin() {
       ) : (
         <input
           type="text"
+          aria-label={label}
           value={value || ""}
           onChange={(event) => onChange(event.target.value)}
           className="w-full bg-black/5 border-2 border-transparent focus:border-black rounded-lg px-4 py-2 text-sm text-black transition-colors outline-none"
@@ -597,7 +676,7 @@ export default function Admin() {
   );
 
   const renderCard = (item, index, titleField, fields) => (
-    <motion.div
+    <Motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.1 }}
@@ -635,8 +714,44 @@ export default function Admin() {
         </button>
       </div>
 
+      {activeTab.id === "upcoming" && <div className="flex flex-wrap items-center gap-4 mb-4 pl-2">
+        <button type="button" onClick={() => setPreviewEvent(item)} className="border-2 border-black px-3 py-2 text-sm font-bold">Preview event</button>
+        <span className="text-xs font-bold uppercase">{eventStatus(item, clock)}{item.status_override ? " (manual)" : " (automatic)"}</span>
+        <button type="button" disabled={!item.id || item.id.startsWith("temp-")} title={item.id?.startsWith("temp-") ? "Save the event before linking an album" : "Create an album for this event"}
+          onClick={() => { if (JSON.stringify(formData) !== JSON.stringify(initialSnapshot)) { setTabError("Save your event changes before creating an album."); return; } pendingAlbumEvent.current = item.id; setActiveTab(TABS.find((tab) => tab.id === "album")); }}
+          className="border-2 border-black px-3 py-2 text-sm font-bold disabled:opacity-40">Add event album</button>
+      </div>}
+      <label className="flex items-center gap-3 mb-6 pl-2 font-bold text-sm">
+        <input type="checkbox" checked={Boolean(activeTab.id === "team" ? item.is_active : item.is_published)}
+          onChange={(event) => updateItem(index, activeTab.id === "team" ? "is_active" : "is_published", event.target.checked)} />
+        {activeTab.id === "team" ? "Active member" : "Published on website"}
+      </label>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 pl-2">
         {fields.map((field) => {
+          if (field.type === "schedule") {
+            return <label key={field.key} className="text-sm font-bold">{field.label}
+              <input type="datetime-local" required value={indiaDateTime(item[field.key])}
+                onChange={(event) => {
+                  const value = fromIndiaDateTime(event.target.value);
+                  setFormData((current) => current.map((entry, position) => position !== index ? entry : {
+                    ...entry, [field.key]: value,
+                    ...(field.key === "starts_at" ? { date: event.target.value.slice(0, 10), time: event.target.value.slice(11, 16) } : {}),
+                  }));
+                }} className="block w-full mt-2 border-2 border-black/20 rounded-lg px-4 py-3" />
+            </label>;
+          }
+          if (field.type === "status" || field.type === "eventLink") {
+            return <label key={field.key} className="text-sm font-bold">{field.label}
+              <select value={item[field.key] || ""} onChange={(event) => updateItem(index, field.key, event.target.value)} className="block w-full mt-2 border-2 border-black/20 rounded-lg px-4 py-3">
+                {field.type === "status" ? <><option value="">Automatic from schedule</option><option value="upcoming">Upcoming (manual)</option><option value="live">Live (manual)</option><option value="past">Past (manual)</option></> : <>
+                  <option value="">Standalone album</option>
+                  {item.event_id && !eventOptions.some((event) => event.id === item.event_id) && <option value={item.event_id}>Linked event (unavailable)</option>}
+                  {eventOptions.map((event) => <option key={event.id} value={event.id}>{event.title}</option>)}
+                </>}
+              </select>
+              {field.type === "status" && <span className="block text-xs font-normal mt-2">Automatic follows the start and end times. A manual status stays selected until you change it back.</span>}
+            </label>;
+          }
           if (field.type === "stringList") {
             const value = Array.isArray(item[field.key])
               ? item[field.key].join(", ")
@@ -813,6 +928,11 @@ export default function Admin() {
                           />
                         </label>
                       </div>
+                      <label className="md:col-span-3 text-xs font-bold">Photo caption (searchable)
+                        <input type="text" value={item.photo_captions?.[photo] || ""}
+                          onChange={(event) => updateItem(index, "photo_captions", { ...item.photo_captions, [photo]: event.target.value })}
+                          className="block w-full mt-2 bg-white border-2 border-black/20 rounded-lg px-4 py-2" />
+                      </label>
                       <button
                         type="button"
                         onClick={() => removePhoto(index, photoIndex)}
@@ -860,7 +980,7 @@ export default function Admin() {
           );
         })}
       </div>
-    </motion.div>
+    </Motion.div>
   );
 
   if (isCheckingAuth) {
@@ -877,7 +997,7 @@ export default function Admin() {
   if (!session) {
     return (
       <div className="min-h-[80vh] py-20 bg-[#e6e4dc] flex flex-col justify-center items-center p-6 font-sans">
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white p-8 md:p-10 rounded-2xl max-w-md w-full border-2 border-black/10 shadow-[12px_12px_0px_rgba(0,0,0,0.1)] relative"
@@ -943,15 +1063,16 @@ export default function Admin() {
               {isLoggingIn ? "Signing In..." : "Unlock"}
             </button>
           </form>
-        </motion.div>
+        </Motion.div>
       </div>
     );
   }
 
   return (
     <div className="min-h-[80vh] bg-[#e6e4dc] pt-24 pb-16 px-6 md:px-12 lg:px-20 font-sans overflow-hidden">
+      {previewEvent && <EventModal event={previewEvent} status={eventStatus(previewEvent, clock)} onClose={() => setPreviewEvent(null)} />}
       <div className="max-w-6xl mx-auto">
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
@@ -959,49 +1080,51 @@ export default function Admin() {
         >
           <div>
             <h1 className="text-5xl md:text-6xl font-black font-serif text-black tracking-tighter inline-flex items-center gap-4">
-              <motion.div
+              <Motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
               >
                 <FaCog size={40} className="text-black/20" />
-              </motion.div>
-              ADMIN CONTROL.
+              </Motion.div>
+              Page manager
             </h1>
             <p className="text-black/50 text-xl font-bold font-mono tracking-widest uppercase mt-4">
-              SYSTEM // SUPABASE REGISTRY
+              Choose a page, then edit its content
             </p>
           </div>
-          <motion.button
+          <Motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleLogout}
             className="flex items-center gap-2 text-sm font-bold tracking-widest uppercase text-black/50 hover:text-black hover:bg-black/5 border-2 border-transparent hover:border-black/10 px-4 py-2 rounded-xl transition-all w-fit md:w-auto"
           >
             <FaSignOutAlt /> Lock Portal
-          </motion.button>
-        </motion.div>
+          </Motion.button>
+        </Motion.div>
 
+        <nav className="admin-page-nav" aria-label="Website pages">{Object.entries(pageSchemas).map(([page,schema]) => <button key={page} type="button" aria-current={activePage === page ? "page" : undefined} onClick={() => selectEditor({ id: "page", label: "Page content" }, page)}>{schema.label}</button>)}</nav>
         <div className="flex flex-col lg:flex-row gap-8 relative items-start">
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
             className="w-full lg:w-64 shrink-0 flex flex-col gap-2 lg:sticky lg:top-32 z-20"
           >
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-black/40 mb-2 pl-2">
-              Data Modules
+              {pageSchemas[activePage].label}
             </h3>
-            {TABS.map((tab, index) => {
+            <button type="button" aria-current={activeTab.id === "page" ? "page" : undefined} onClick={() => selectEditor({ id: "page", label: "Page content" })} className={`px-5 py-4 rounded-xl font-bold text-left ${activeTab.id === "page" ? "bg-black text-white" : "bg-white text-black/60"}`}>Page content</button>
+            {TABS.filter(tab => pageSchemas[activePage].modules.includes(tab.id)).map((tab, index) => {
               const isActive = activeTab.id === tab.id;
               const Icon = tab.icon;
 
               return (
-                <motion.button
+                <Motion.button
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.4, delay: 0.2 + index * 0.1 }}
                   key={tab.id}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => selectEditor(tab)}
                   className={`flex items-center gap-3 px-5 py-4 rounded-xl font-bold tracking-wide text-left transition-all duration-300 ${
                     isActive
                       ? "bg-black text-white shadow-[6px_6px_0px_rgba(0,0,0,0.1)] -translate-y-1"
@@ -1016,32 +1139,33 @@ export default function Admin() {
                   {!isActive && (
                     <div className="absolute inset-0 bg-black/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                   )}
-                </motion.button>
+                </Motion.button>
               );
             })}
-          </motion.div>
+            {["home", "events", "gallery"].includes(activePage) && <button type="button" onClick={() => selectEditor({ id: "presentation", label: "Appearance" })} className={`px-5 py-4 rounded-xl font-bold text-left ${activeTab.id === "presentation" ? "bg-black text-white" : "bg-white text-black/60"}`}>Appearance</button>}
+          </Motion.div>
 
-          <div className="flex-1 max-w-4xl">
+          {activeTab.id === "page" ? <div className="flex-1 min-w-0 w-full"><PageContentEditor key={activePage} page={activePage} onDirtyChange={onPageDirtyChange} onBusyChange={onPageBusyChange} /></div> : activeTab.id === "presentation" ? <div className="flex-1 min-w-0 w-full"><PresentationManager onDirtyChange={onPageDirtyChange} onBusyChange={onPageBusyChange} /></div> : <div className="flex-1 min-w-0 w-full max-w-4xl">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 bg-white p-6 rounded-2xl border-2 border-black/10 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-black/5 rounded-full -translate-y-12 translate-x-8 pointer-events-none"></div>
               <div>
                 <h2 className="text-2xl font-black text-black">{activeTab.label}</h2>
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-black/40 mt-2">
-                  OG founders stay static in code and are not editable here.
+                  Shared content: changes also appear wherever this collection is used.
                 </p>
               </div>
 
               <div className="flex items-center gap-3 relative z-10">
                 <button
                   onClick={handleReset}
-                  disabled={isLoadingTab || isSaving}
+                  disabled={isLoadingTab || isSaving || Boolean(uploadingTarget)}
                   className="px-4 py-3 bg-black/5 hover:bg-black/10 disabled:opacity-60 text-black rounded-xl font-bold text-sm tracking-wide transition-colors flex items-center gap-2"
                 >
                   <FaUndo size={14} /> Reset
                 </button>
                 <button
                   onClick={handleSave}
-                  disabled={isLoadingTab || isSaving}
+                  disabled={isLoadingTab || isSaving || !hasLoadedTab || Boolean(uploadingTarget)}
                   className="px-6 py-3 bg-black text-white hover:scale-105 active:scale-95 disabled:opacity-70 disabled:hover:scale-100 rounded-xl font-bold text-sm tracking-wide transition-transform shadow-[4px_4px_0px_rgba(0,0,0,0.2)] flex items-center gap-2"
                 >
                   {isSaving ? (
@@ -1074,10 +1198,12 @@ export default function Admin() {
                     {formData.map((event, index) =>
                       renderCard(event, index, "title", [
                         { key: "title", label: "Event Title" },
-                        { key: "date", label: "Date" },
+                        { key: "starts_at", label: "Start date and time (India time)", type: "schedule" },
+                        { key: "ends_at", label: "End date and time (India time)", type: "schedule" },
+                        { key: "status_override", label: "Event status", type: "status" },
                         { key: "category", label: "Category" },
                         { key: "location", label: "Location" },
-                        { key: "time", label: "Time" },
+                        { key: "registration_url", label: "Registration URL (optional)" },
                         { key: "gradient", label: "CSS Gradient Class" },
                         {
                           key: "image",
@@ -1149,7 +1275,8 @@ export default function Admin() {
                     {formData.map((album, index) =>
                       renderCard(album, index, "title", [
                         { key: "title", label: "Event Title" },
-                        { key: "date", label: "Date" },
+                        { key: "date", label: "Date (YYYY-MM-DD)" },
+                        { key: "event_id", label: "Linked event", type: "eventLink" },
                         {
                           key: "coverImage",
                           label: "Cover Image",
@@ -1216,7 +1343,7 @@ export default function Admin() {
                 )}
               </div>
             )}
-          </div>
+          </div>}
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import LoadingScreen from "./components/LoadingScreen";
+import CustomCursor from "./components/CustomCursor";
 import ParticleBackground from "./components/ParticleBackground";
 
 const Home = lazy(() => import("./pages/Home"));
@@ -11,6 +12,8 @@ const About = lazy(() => import("./pages/About"));
 const Events = lazy(() => import("./pages/Events"));
 const Team = lazy(() => import("./pages/Team"));
 const Contact = lazy(() => import("./pages/Contact"));
+
+const Gallery = lazy(() => import("./pages/Gallery"));
 
 const Admin = lazy(() => import("./pages/Admin"));
 
@@ -39,6 +42,7 @@ export default function App() {
   return (
     <div className="min-h-screen relative bg-light-bg text-black">
       <ParticleBackground />
+      <CustomCursor />
       <Navbar />
       <ScrollToTop />
 
@@ -51,6 +55,7 @@ export default function App() {
               <Route path="/events" element={<AnimatedPage><Events /></AnimatedPage>} />
               <Route path="/team" element={<AnimatedPage><Team /></AnimatedPage>} />
               <Route path="/contact" element={<AnimatedPage><Contact /></AnimatedPage>} />
+              <Route path="/gallery" element={<AnimatedPage><Gallery /></AnimatedPage>} />
               <Route path="/admin" element={<AnimatedPage><Admin /></AnimatedPage>} />
             </Routes>
           </AnimatePresence>

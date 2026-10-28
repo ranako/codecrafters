@@ -1,48 +1,15 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import SectionWrapper, { SectionHeader } from "./SectionWrapper";
-import { FaLaptopCode, FaHandsHelping, FaLaptopHouse, FaNetworkWired, FaTools } from "react-icons/fa";
+import { usePageContent } from "../hooks/usePageContent";
+import { withContentIcons } from "../lib/contentIcons";
 
-const pillarsData = [
-  {
-    id: 1,
-    title: "Hackathons",
-    description: "Intense, thrilling 24-hour coding sprints where our members form teams, brainstorm wild ideas, and build fully-functional prototypes overnight.",
-    icon: FaLaptopCode,
-    image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=800",
-  },
-  {
-    id: 2,
-    title: "Open Source",
-    description: "Contributing to the global tech ecosystem. We host bootcamps that teach members how to navigate GitHub, understand codebases, and make their first PRs.",
-    icon: FaHandsHelping,
-    image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=800",
-  },
-  {
-    id: 3,
-    title: "Workshops",
-    description: "Weekly deep dives into modern frameworks, cybersecurity, AI, and UI/UX design led by our own experienced members and guest industry speakers.",
-    icon: FaTools,
-    image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=800",
-  },
-  {
-    id: 4,
-    title: "Mentorship",
-    description: "Pairing enthusiastic freshmen with senior developers to bridge the gap between academic theory and practical, industry-ready skills.",
-    icon: FaLaptopHouse,
-    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=800",
-  },
-  {
-    id: 5,
-    title: "Networking",
-    description: "Building lifelong connections. From casual Friday pizza nights to formal tech symposiums, our community is all about the people you meet.",
-    icon: FaNetworkWired,
-    image: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=800",
-  }
-];
 
 export default function ClubPillars() {
   const [active, setActive] = useState(0);
+  const content = usePageContent("about").pillars;
+  const pillarsData = withContentIcons(content.items);
+  if (!content.enabled || !pillarsData.length) return null;
 
   const pastelBgs = ["bg-[#e3ebd5]", "bg-[#dce4f0]", "bg-[#f0e3dc]", "bg-[#e6dcf0]", "bg-[#f0ecd5]"];
   const pastelText = ["text-[#6f8252]", "text-[#5b739e]", "text-[#a67a63]", "text-[#8767a1]", "text-[#91864a]"];
@@ -50,18 +17,18 @@ export default function ClubPillars() {
   return (
     <SectionWrapper>
       <SectionHeader
-        tagline="What We Build On"
-        title="Our Core Pillars"
-        description="The foundation of our club experience. Hover over each pillar to explore the initiatives driving our community forward."
+        tagline={content.eyebrow}
+        title={content.title}
+        description={content.description}
       />
 
       <div className="flex flex-col md:flex-row gap-4 h-[60vh] min-h-[400px] w-full mt-6">
         {pillarsData.map((pillar, index) => {
-          const isActive = active === index;
+          const isActive = Math.min(active, pillarsData.length - 1) === index;
 
           return (
-            <motion.div
-              key={pillar.id}
+            <Motion.div
+              key={index}
               layout
               onHoverStart={() => setActive(index)}
               onClick={() => setActive(index)}
@@ -114,7 +81,7 @@ export default function ClubPillars() {
                  <p className="text-sm text-white/90 line-clamp-2">{pillar.description}</p>
               </div>
 
-            </motion.div>
+            </Motion.div>
           );
         })}
       </div>

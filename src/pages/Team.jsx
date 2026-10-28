@@ -1,203 +1,62 @@
-import { motion } from "framer-motion";
+import { motion as Motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { FaLinkedin } from "react-icons/fa";
-import { ogTeamMembers } from "../data/siteData";
+import { FaLinkedin, FaArrowUp } from "react-icons/fa";
+import { usePageContent } from "../hooks/usePageContent";
 import { fetchCoreTeamMembers } from "../lib/contentApi";
+import "./team-scrapbook.css";
+
+const rotations = [-2, 1.5, -1.5, 2, -2, 1];
+const tapeColors = ["#d9e3c9", "#d4deec", "#ead8cf", "#ded3e9", "#e9e1c1"];
+
+function Polaroid({ member, index, original = false }) {
+  const reduce = useReducedMotion();
+  const content = usePageContent("team");
+  const [failedImage, setFailedImage] = useState("");
+  const initials = member.name.split(" ").filter(Boolean).map(word => word[0]).slice(0, 2).join("");
+  let profile;
+  try {
+    const url = new URL(member.linkedin);
+    if (url.protocol === "https:" && (url.hostname === "linkedin.com" || url.hostname.endsWith(".linkedin.com"))) profile = url.href;
+  } catch { /* A member without a valid profile remains a readable card. */ }
+  return (
+    <Motion.article className={`team-print ${original ? "team-print-original" : ""}`} style={{ "--print-angle": `${rotations[index % rotations.length]}deg`, "--tape-color": tapeColors[index % tapeColors.length] }} initial={reduce ? false : { opacity: 0, transform: "translateY(12px)" }} whileInView={{ opacity: 1, transform: "translateY(0)" }} viewport={{ once: true, amount: .1 }} transition={{ duration: .28, delay: (index % 3) * .045, ease: [.23, 1, .32, 1] }}>
+      <div className="team-print-paper">
+        <span className="team-print-tape" aria-hidden="true" />
+        <div className="team-print-photo">
+          {member.image && failedImage !== member.image ? <img src={member.image} alt={`Portrait of ${member.name}`} width="600" height="600" loading={original && index < 3 ? "eager" : "lazy"} decoding="async" onError={() => setFailedImage(member.image)} /> : <div className="team-print-fallback" role="img" aria-label={`Photo unavailable for ${member.name}`}><span aria-hidden="true">{initials}</span></div>}
+        </div>
+        <div className="team-print-caption"><span className="team-print-stamp">{original ? content.originals.badge : content.core.badge}</span><h3>{member.name}</h3><p>{member.role}</p></div>
+        <div className="team-print-footer">{profile ? <a href={profile} target="_blank" rel="noopener noreferrer" aria-label={`Connect with ${member.name} on LinkedIn (opens in a new tab)`}><FaLinkedin aria-hidden="true" /><span>Connect</span><FaArrowUp className="team-print-arrow" aria-hidden="true" /></a> : <span className="team-print-community">CodeCrafters</span>}</div>
+      </div>
+    </Motion.article>
+  );
+}
 
 export default function Team() {
-  const [coreTeamMembers, setCoreTeamMembers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const rotations = [-3, 2, -6, 4, -2, 5, -4, 3, -1];
-  
-  const pastelBgs = [
-    "bg-[#e3ebd5]/90", // Sage
-    "bg-[#dce4f0]/90", // Slate
-    "bg-[#f0e3dc]/90", // Peach
-    "bg-[#e6dcf0]/90", // Lilac
-    "bg-[#f0ecd5]/90", // Pale Yellow
-  ];
-
+  const content = usePageContent("team");
+  const ogTeamMembers = content.originals.items;
+  const [members, setMembers] = useState([]);
+  const [status, setStatus] = useState("loading");
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    let isMounted = true;
-
-    async function loadCoreTeamMembers() {
-      try {
-        const data = await fetchCoreTeamMembers();
-        if (!isMounted) return;
-        setCoreTeamMembers(data);
-        setError("");
-      } catch (fetchError) {
-        if (!isMounted) return;
-        setCoreTeamMembers([]);
-        setError(fetchError.message || "Unable to load core members.");
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    loadCoreTeamMembers();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
+    let active = true;
+    fetchCoreTeamMembers().then(data => { if (active) { setMembers(data); setStatus("ready"); } }).catch(() => { if (active) setStatus("error"); });
+    return () => { active = false; };
+  }, [attempt]);
   return (
-    <div className="pt-28 pb-20 min-h-[80vh] w-full bg-[#e6e4dc] relative overflow-hidden flex flex-col items-center">
-      
-      {/* Subtle Polka-dot Desk Texture */}
-      <div 
-         className="absolute inset-0 opacity-[0.05] pointer-events-none" 
-         style={{ backgroundImage: 'radial-gradient(#2b2a27 1.5px, transparent 1.5px)', backgroundSize: '32px 32px' }} 
-      />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col gap-12 md:gap-16 items-center">
-        
-        {/* THE FOUNDRY / OG CLUSTER (Enhanced Vintage Scrapbook Style) */}
-        <div className="flex flex-wrap justify-center gap-12 md:gap-20 items-center w-full">
-          {ogTeamMembers.map((member, index) => {
-            const rot = rotations[index % rotations.length];
-
-            return (
-              <motion.div
-                initial={{ opacity: 0, y: 40, scale: 0.8, rotate: rot }}
-                whileInView={{ opacity: 1, y: 0, scale: 1, rotate: rot }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.6, delay: index * 0.1, type: "spring", stiffness: 100, bounce: 0.4 }}
-                whileHover={{ y: -6, scale: 1.02, rotate: 0, zIndex: 50, transition: { duration: 0.2 } }}
-                key={member.name}
-                // restored size and dynamic rotations defined via framer motion
-                className="relative group bg-white p-4 md:p-5 pb-10 shadow-[0_15px_35px_-10px_rgba(0,0,0,0.15)] transition-shadow duration-300 ease-out flex-shrink-0 w-[200px] sm:w-[240px] lg:w-[280px] cursor-pointer border border-black/5 rounded-sm z-10"
-              >
-                
-                {/* Pastel Masking Tape for OG */}
-                <div className={`absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-7 ${pastelBgs[index % pastelBgs.length]} backdrop-blur-md shadow-sm border border-black/10 -rotate-[2deg] pointer-events-none z-20`} />
-
-                {/* Polaroid Photo Frame - Unified Slightly Desaturated Style */}
-                <div className="w-full aspect-square bg-[#eaeaea] overflow-hidden filter saturate-[0.8] transition-all duration-700 relative">
-                  {member.image ? (
-                    <img
-                      src={member.image}
-                      alt={member.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-[#eaeaea]">
-                      <span className="text-black/10 font-bold text-4xl shadow-sm">
-                        {member.name.split(" ").map((w) => w[0]).join("")}
-                      </span>
-                    </div>
-                  )}
-                  {/* Vignette */}
-                  <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.05)] pointer-events-none" />
-                </div>
-
-                <div className="pt-5 pb-2 text-center flex flex-col items-center">
-                  {/* Distinctive OG Badge */}
-                  <span className="inline-block px-3 py-1 mb-2 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] bg-black text-white rounded-sm shadow-md border border-white/20">
-                    The OG'S
-                  </span>
-                  
-                  <h3 className="text-xl font-black text-black tracking-tight leading-none mb-1 font-serif mt-2">
-                    {member.name}
-                  </h3>
-                  
-                  <p className="text-xs font-bold text-black/50">
-                    {member.role}
-                  </p>
-
-                  <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                     {member.linkedin && (
-                        <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 bg-black text-white rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all">
-                           <FaLinkedin size={14} />
-                        </a>
-                     )}
-                  </div>
-                </div>
-
-              </motion.div>
-            );
-          })}
-        </div>
-        
-        {/* DESK SEPARATOR */}
-        <div className="w-full max-w-sm border-t-2 border-dotted border-black/10" />
-
-        {/* CORE CLUSTER (Enhanced Clean Scrapbook Style) */}
-        <div className="flex flex-wrap justify-center gap-12 md:gap-20 items-center w-full">
-          {coreTeamMembers.map((member, index) => {
-            const rot = rotations[(index + 4) % rotations.length];
-
-            return (
-              <motion.div
-                initial={{ opacity: 0, y: 40, scale: 0.8, rotate: rot }}
-                whileInView={{ opacity: 1, y: 0, scale: 1, rotate: rot }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.6, delay: index * 0.1, type: "spring", stiffness: 100, bounce: 0.4 }}
-                whileHover={{ y: -6, scale: 1.02, rotate: 0, zIndex: 50, transition: { duration: 0.2 } }}
-                key={member.name}
-                // MODERN STYLE POLAROID
-                className="relative group bg-white p-4 md:p-5 pb-10 shadow-[0_15px_35px_-10px_rgba(0,0,0,0.15)] transition-shadow duration-300 ease-out flex-shrink-0 w-[200px] sm:w-[240px] lg:w-[280px] cursor-pointer border border-black/5 rounded-sm z-10"
-              >
-                
-                {/* Pastel Glossy Tape */}
-                <div className={`absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-7 ${pastelBgs[(index + 4) % pastelBgs.length]} backdrop-blur-md shadow-sm border border-black/10 pointer-events-none z-20`} />
-
-                {/* Polaroid Photo Frame - Unified Slightly Desaturated Style */}
-                <div className="w-full aspect-square bg-[#f0f0f0] overflow-hidden filter saturate-[0.8] transition-all duration-700 relative">
-                  {member.image ? (
-                    <img
-                      src={member.image}
-                      alt={member.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-[#eaeaea]">
-                      <span className="text-black/10 font-bold text-4xl shadow-sm">
-                        {member.name.split(" ").map((w) => w[0]).join("")}
-                      </span>
-                    </div>
-                  )}
-                  {/* Clean Vignette */}
-                  <div className="absolute inset-0 shadow-[inset_0_0_15px_rgba(0,0,0,0.05)] pointer-events-none" />
-                </div>
-
-                <div className="pt-5 pb-2 text-center flex flex-col items-center">
-                  {/* Distinctive Core Badge */}
-                  <span className="inline-block px-3 py-1 mb-2 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] bg-white text-black rounded-sm border border-black shadow-sm">
-                    Core Team
-                  </span>
-                  
-                  <h3 className="text-xl font-black text-black tracking-tight leading-none mb-1 font-sans mt-2">
-                    {member.name}
-                  </h3>
-                  
-                  <p className="text-xs font-bold text-black/40 font-sans">
-                    {member.role}
-                  </p>
-
-                  <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                     {member.linkedin && (
-                        <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 bg-black text-white rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all">
-                           <FaLinkedin size={14} />
-                        </a>
-                     )}
-                  </div>
-                </div>
-
-              </motion.div>
-            );
-          })}
-        </div>
-        {isLoading && (
-          <p className="text-xs font-black uppercase tracking-[0.3em] text-black/40">
-            Loading core members...
-          </p>
-        )}
-        {error && <p className="text-sm font-bold text-red-600">{error}</p>}
+    <div className="team-board">
+      <div className="team-board-shell">
+        <header className="team-board-intro"><h1>{content.intro.title}</h1><p>{content.intro.description}</p></header>
+        <section hidden={!content.originals.enabled} className="team-board-section" aria-labelledby="team-originals">
+          <div className="team-board-heading"><h2 id="team-originals">{content.originals.title}</h2><span>{ogTeamMembers.length} {content.originals.description}</span></div>
+          <div className="team-board-grid">{ogTeamMembers.map((member, index) => <Polaroid key={member.name} member={member} index={index} original />)}</div>
+        </section>
+        <section hidden={!content.core.enabled} className="team-board-section team-board-core" aria-labelledby="team-core" aria-busy={status === "loading"}>
+          <div className="team-board-heading"><h2 id="team-core">{content.core.title}</h2><span>{content.core.description}</span></div>
+          {status === "loading" && <div className="team-board-grid" role="status"><span className="sr-only">Loading core members</span>{[0, 1, 2].map(index => <div className="team-board-skeleton" key={index} aria-hidden="true"><div /><span /><span /></div>)}</div>}
+          {status === "error" && <div className="team-board-notice" role="alert"><h3>The core team couldn’t load.</h3><p>Please try again to see our current members.</p><button onClick={() => { setStatus("loading"); setAttempt(value => value + 1); }}>Try again</button></div>}
+          {status === "ready" && (members.length ? <div className={`team-board-grid ${members.length === 1 ? "team-board-grid-single" : ""}`}>{members.map((member, index) => <Polaroid key={member.id || member.name} member={member} index={index + 2} />)}</div> : <div className="team-board-notice"><h3>{content.core.emptyTitle}</h3><p>{content.core.emptyDescription}</p></div>)}
+        </section>
       </div>
     </div>
   );
