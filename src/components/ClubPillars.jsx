@@ -1,3 +1,4 @@
+import DisplayImage from "./DisplayImage";
 import { useState } from "react";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import SectionWrapper, { SectionHeader } from "./SectionWrapper";
@@ -38,8 +39,8 @@ export default function ClubPillars() {
               className="relative rounded-3xl overflow-hidden cursor-pointer group bg-black/5"
             >
               {/* Background Image */}
-              <img 
-                src={pillar.image} 
+              <DisplayImage
+                src={pillar.image} settings={pillar.image_display} placement="about"
                 alt={pillar.title} 
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />

@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import DisplayImage from "../components/DisplayImage";
+import { useMemo, useState } from 'react';
 import { usePageContent } from '../hooks/usePageContent';
 import { useSearchParams } from 'react-router-dom';
+import { usePublicCollection, usePublicPreview } from "../hooks/usePublicCollection";
 import { fetchEvents, fetchPastEventAlbums } from '../lib/contentApi';
 import { galleryPhotos } from '../lib/eventUtils';
 import { usePresentationSettings } from "../hooks/usePresentationSettings";
@@ -10,25 +12,22 @@ import GalleryLightbox from "../components/GalleryLightbox";
 export default function Gallery() {
   const content = usePageContent("gallery").intro;
   const presentation = usePresentationSettings();
-  const [params, setParams] = useSearchParams();
+  const preview = usePublicPreview();
+  const [routeParams, setRouteParams] = useSearchParams();
+  const [localParams, setLocalParams] = useState(new URLSearchParams());
+  const params = preview ? localParams : routeParams;
+  const setParams = preview ? setLocalParams : setRouteParams;
   const query = params.get('q') || '';
   const eventId = params.get('event') || '';
   const albumId = params.get('album') || '';
   const category = params.get('category') || '';
-  const [albums, setAlbums] = useState([]);
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [selected, setSelected] = useState(null);
-  const [attempt, setAttempt] = useState(0);
-  useEffect(() => {
-    let active = true;
-    Promise.all([fetchPastEventAlbums(), fetchEvents()]).then(([nextAlbums, nextEvents]) => {
-      if (active) { setAlbums(nextAlbums); setEvents(nextEvents); setError(''); }
-    }).catch(() => { if (active) setError('The gallery could not be loaded. Please try again later.'); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [attempt]);
+  const albumCollection = usePublicCollection('albums', fetchPastEventAlbums);
+  const eventCollection = usePublicCollection('events', fetchEvents);
+  const albums = albumCollection.data;
+  const events = eventCollection.data;
+  const loading = albumCollection.loading || eventCollection.loading;
+  const error = albumCollection.error || eventCollection.error;
+  const [selected,setSelected] = useState(null);
   const allPhotos = useMemo(() => galleryPhotos(albums, events), [albums, events]);
   const eventMap = useMemo(() => new Map(events.map((event) => [event.id, event])), [events]);
   const categories = [...new Set(allPhotos.map((photo) => eventMap.get(photo.album.event_id)?.category).filter(Boolean))];
@@ -67,14 +66,14 @@ export default function Gallery() {
           {events.map((event) => <option key={event.id} value={event.id}>{event.title}</option>)}
         </select></label>
       </div>
-      {loading ? <div className="gallery-loading" role="status"><span className="sr-only">Loading the archive</span>{[0,1,2].map(item => <div key={item} aria-hidden="true"><div /><span /></div>)}</div> : error ? <div role="alert" className="gallery-empty"><h3>The gallery couldn’t load.</h3><p>Please try again to see the community albums.</p><button className="gallery-retry" onClick={() => { setLoading(true); setError(''); setAttempt(value => value + 1); }}>Try again</button></div> : <>
+      {loading ? <div className="gallery-loading" role="status"><span className="sr-only">Loading the archive</span>{[0,1,2].map(item => <div key={item} aria-hidden="true"><div /><span /></div>)}</div> : error ? <div role="alert" className="gallery-empty"><h3>The gallery couldn’t load.</h3><p>Please try again to see the community albums.</p><button className="gallery-retry" onClick={() => { albumCollection.refresh(); eventCollection.refresh(); }}>Try again</button></div> : <>
         <div className="gallery-results"><p role="status">{photos.length} {photos.length === 1 ? 'frame' : 'frames'}{query ? ` matching “${query}”` : ' in view'}</p>{(query || eventId || albumId || category) && <button onClick={clearFilters}>Clear filters</button>}</div>
         {!photos.length && <div className="gallery-empty"><h3>{content.emptyTitle}</h3><p>{query || eventId || albumId || category ? 'Try a different search or clear the filters.' : content.emptyDescription}</p>{(query || eventId || albumId || category) && <button className="gallery-retry" onClick={clearFilters}>Clear filters</button>}</div>}
         <div className="gallery-archive-grid">
           {photos.map((photo, index) => {
             const event = eventMap.get(photo.album.event_id);
             return <button key={`${photo.album.id}-${photo.url}`} onClick={() => openPhoto(photo)} className={`gallery-archive-frame ${photos.length >= 4 && index % 7 === 0 ? 'gallery-archive-feature' : ''}`} aria-label={`View ${photo.caption || photo.album.title}, photo ${photo.index + 1}`}>
-              <img loading="lazy" decoding="async" width="1200" height="900" src={photo.url} alt={photo.caption || `${photo.album.title}, photo ${photo.index + 1}`} />
+              <DisplayImage loading="lazy" decoding="async" width="1200" height="900" src={photo.url} settings={photo.album.photo_display?.[photo.url]} placement="photoGrid" alt={photo.caption || `${photo.album.title}, photo ${photo.index + 1}`} />
               <span className="gallery-frame-top"><span>{event?.category || photo.album.date || 'Community'}</span><span className="gallery-expand" aria-hidden="true">↗</span></span>
               <span className="gallery-frame-info"><small>{event?.location || photo.album.date}</small><strong>{photo.caption || photo.album.title}</strong>{photo.caption && <span>{photo.album.title}</span>}<span className="gallery-frame-bottom"><span>Frame {String(photo.index + 1).padStart(2, '0')}</span><span>View frame →</span></span></span>
             </button>;

@@ -1,47 +1,25 @@
+import DisplayImage from "./DisplayImage";
 import { usePageContent } from "../hooks/usePageContent";
 import { useState, useEffect, useRef } from "react";
 import { motion as Motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import { FaCameraRetro } from "react-icons/fa";
 import AlbumViewer from "./AlbumViewer";
+import { usePublicCollection, usePublicPreview } from "../hooks/usePublicCollection";
 import { fetchPastEventAlbums } from "../lib/contentApi";
 
 export default function PastEvents() {
   const content = usePageContent("events").intro;
+  const preview = usePublicPreview();
+  const view = preview?.document?.defaultView || window;
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = useReducedMotion() || Boolean(preview);
   const [stageHeight, setStageHeight] = useState(680);
-  const [compact, setCompact] = useState(window.innerWidth < 768);
-  const [pastEvents, setPastEvents] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [compact, setCompact] = useState(view.innerWidth < 768);
+  const collection = usePublicCollection('albums', fetchPastEventAlbums);
+  const pastEvents = collection.data;
+  const isLoading = collection.loading;
+  const error = collection.error;
   const rotations = ["-rotate-3", "rotate-2", "-rotate-[5deg]", "rotate-4", "-rotate-2", "rotate-6", "-rotate-4"];
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadPastEvents() {
-      try {
-        const data = await fetchPastEventAlbums();
-        if (!isMounted) return;
-        setPastEvents(data);
-        setError("");
-      } catch (fetchError) {
-        if (!isMounted) return;
-        setPastEvents([]);
-        setError(fetchError.message || "Unable to load the photo album.");
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    loadPastEvents();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   const targetRef = useRef(null);
   const contentRef = useRef(null);
@@ -51,17 +29,17 @@ export default function PastEvents() {
   useEffect(() => {
     const measure = () => {
       if (contentRef.current) {
-        setScrollRange(Math.max(0, contentRef.current.scrollWidth - window.innerWidth));
-        setStageHeight(Math.ceil(window.innerHeight * 0.24 + contentRef.current.offsetHeight + 48));
-        setCompact(window.innerWidth < 768);
+        setScrollRange(Math.max(0, contentRef.current.scrollWidth - view.innerWidth));
+        setStageHeight(Math.ceil(view.innerHeight * 0.24 + contentRef.current.offsetHeight + 48));
+        setCompact(view.innerWidth < 768);
       }
     };
     measure();
     const observer = new ResizeObserver(measure);
     if (contentRef.current) observer.observe(contentRef.current);
-    window.addEventListener("resize", measure);
-    return () => { observer.disconnect(); window.removeEventListener("resize", measure); };
-  }, []);
+    view.addEventListener("resize", measure);
+    return () => { observer.disconnect(); view.removeEventListener("resize", measure); };
+  }, [view]);
 
   const { scrollYProgress } = useScroll({
     target: targetRef,
@@ -135,8 +113,8 @@ export default function PastEvents() {
                   <div className={`absolute inset-0 p-4 md:p-5 pb-12 flex flex-col transition-opacity duration-300 pointer-events-none opacity-100`}>
                     <div className="w-full aspect-square bg-[#eaeaea] border-[3px] border-black/10 overflow-hidden filter grayscale contrast-125 saturate-50 group-hover:grayscale-[0.2] transition-all duration-700 relative flex items-center justify-center text-4xl font-bold text-black/10 shadow-[inset_0_0_20px_rgba(0,0,0,0.05)]">
                       {event.coverImage ? (
-                        <img
-                          src={event.coverImage}
+                        <DisplayImage
+                          src={event.coverImage} settings={event.cover_display} placement="albumHanging"
                           alt={event.title}
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />

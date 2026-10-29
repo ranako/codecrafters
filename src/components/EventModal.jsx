@@ -1,3 +1,5 @@
+import { usePublicPreview } from "../hooks/usePublicCollection";
+import DisplayImage from "./DisplayImage";
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
@@ -5,12 +7,16 @@ import { registrationUrl } from '../lib/eventUtils';
 import Countdown from './Countdown';
 
 export default function EventModal({ event, status, onClose }) {
+  const preview = usePublicPreview();
+  const ownerDocument = preview?.document || document;
   const dialog = useRef(null);
   const close = useRef(null);
   const url = registrationUrl(event.registration_url);
   useEffect(() => {
-    const previous = document.activeElement;
     const node = dialog.current;
+    const document = node.ownerDocument;
+    const window = document.defaultView;
+    const previous = document.activeElement;
     const scrollY = window.scrollY;
     const saved = { position: document.body.style.position, top: document.body.style.top, width: document.body.style.width, overflow: document.body.style.overflow };
     document.body.style.position = 'fixed';
@@ -34,7 +40,7 @@ export default function EventModal({ event, status, onClose }) {
     onClick={(e) => { if (e.target === e.currentTarget) { const box = e.currentTarget.getBoundingClientRect(); if (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom) onClose(); } }}>
     <button ref={close} type="button" onClick={onClose} className="event-modal-close" aria-label="Close event details">✕</button>
     <div className="event-modal-layout">
-      {event.image && <div className="event-modal-image"><img src={event.image} alt={event.title} /></div>}
+      {event.image && <div className="event-modal-image"><DisplayImage src={event.image} settings={event.image_display} placement="eventDetail" alt={event.title} /></div>}
       <div className="event-modal-copy">
         <p className="gallery-eyebrow">{status === 'live' ? 'Live now' : status === 'past' ? 'Past event' : 'Upcoming event'}{event.category ? ` / ${event.category}` : ''}</p>
         <h2 id="event-detail-title">{event.title}</h2>
@@ -52,5 +58,5 @@ export default function EventModal({ event, status, onClose }) {
         </div>
       </div>
     </div>
-  </dialog>, document.body);
+  </dialog>, ownerDocument.body);
 }

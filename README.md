@@ -149,3 +149,113 @@ tests/presentationUtils.test.js`. Page editors and public rendering were also
 checked with isolated browser fixtures, including saves/reloads, failed writes,
 missing migration, unsaved drafts, URL validation and visibility. These checks do
 not replace a live authenticated save after applying the database migration.
+
+## Image display and admin editing
+
+The page manager retains its existing page/module navigation and save actions.
+Live website previews have been removed at the user's request. Editors use the
+full available width; image framing controls remain available. Use **View saved
+page** to inspect published content after saving.
+
+Image controls are placement-specific:
+
+- Event covers have separate settings for Events cards, the Home spotlight,
+  and the details dialog.
+- Album covers have Home and hanging-album placements. Individual photo settings
+  have Gallery grid, reel, and viewer placements. Settings and captions follow
+  photo URLs on reorder and move to a replacement URL. Duplicate replacements
+  are rejected. Removing a photo removes its draft metadata as well.
+- Core/original member portraits, testimonial avatars, and About pillar photos
+  keep their frames and support fit, focal position, crop/zoom and reset.
+- Flexible album covers, full-size photos, and the logo also support bounded
+  width, alignment, aspect-ratio lock/presets and optional unlocked height.
+
+Cropping uses CSS; the uploaded original is never resized or rewritten. The focal
+point can be dragged or changed with keyboard-accessible sliders. Dimensions are
+bounded to the available width and viewport. Missing settings retain the original
+image markup and appearance. Failed images show an accessible fallback. No new
+runtime dependencies or temporary object URLs are used.
+
+### Additive database migration
+
+Review and run `supabase/image-display.sql` in the **CodeCrafters** Supabase SQL
+Editor before saving the new settings on collection records. It adds nullable,
+no-default JSONB columns only:
+
+- `upcoming_events.image_display`
+- `team_members.image_display`
+- `testimonials.image_display`
+- `past_event_albums.cover_display` and `photo_display`
+
+Page-content image companions live in the existing `site_page_content.content`
+JSON, so they require no additional table or column. Image URL fields and album
+photo arrays retain their existing format.
+
+The migration begins with read-only schema/policy queries, checks the existing
+source-column types and expected RLS flags, and aborts on incompatible metadata
+columns. It also stops on column-only privilege setups or whole-row RLS expressions that need owner review. It snapshots and verifies policy definitions, RLS flags and table ACLs.
+It does **not** update existing rows, defaults, authentication, storage rules,
+publication flags, grants or policies. A lock timeout avoids waiting indefinitely
+on active tables. Applying it is a separate owner-controlled database operation.
+
+Legacy collection text edits can still save before the migration: the API omits
+new columns unless they are present or customized settings require them. Trying
+to save new image settings without the migration keeps the draft and shows a
+specific setup error. Once columns exist, resets persist as empty settings.
+
+### Draft isolation and save behavior
+
+Unsaved edits stay in local component state and are never broadcast to public
+pages. Public content changes only through the existing save/publication actions.
+
+Uploading continues to use the existing storage bucket. As before, uploaded files
+can exist there before saving; their references and display settings are not
+added to public website content until the existing save/publication action.
+Saving and editor switching are blocked while an upload is pending. Unsaved
+navigation is guarded, failed saves retain the draft, and content loading does
+not reset drafts merely because the authentication session object refreshes.
+
+### Verification and limits
+
+Run the pure checks with:
+
+```
+node --test tests/eventUtils.test.js tests/presentationUtils.test.js tests/pageContentUtils.test.js tests/imageDisplay.test.js
+```
+
+The current optional browser suite is `tests/browser/adminSocialCursor.e2e.cjs`.
+Start Vite first; `PLAYWRIGHT_MODULE` can specify an existing Playwright module.
+It intercepts every Supabase auth, REST and Storage request and never changes
+production records. It covers social icon selection, member links, reload/removal,
+failed saves, draft isolation, preview removal and desktop cursor states. The old
+`adminPreview.e2e.cjs` suite documents the retired preview feature and is no longer
+applicable to the current UI.
+
+Live read-only inspection verified the current table columns and album SQL-array
+behavior. The migration was not applied during implementation. The available API
+does not expose full live RLS policy definitions; authenticated live writes and
+post-migration permissions must be verified by the owner after reviewing/applying
+the SQL. No changes were made to another repository, authentication configuration
+or storage permissions, and nothing was committed, pushed or deployed.
+
+Collection saves preserve the existing multi-request backend workflow. If a later
+record operation fails after an earlier write was acknowledged, the editor keeps
+the draft and explicitly warns that some changes may already be saved. Storage
+cleanup runs only after confirmed record readback; cleanup failure is reported
+as a warning rather than incorrectly calling a successful content save a failure.
+
+### Social icons, member links and cursor
+
+Social selectors include Behance, Instagram, GitHub, LinkedIn and Discord.
+Original and core members have optional GitHub, Behance and LinkedIn links;
+public cards show icons only for HTTPS URLs on the corresponding platform.
+Core-member GitHub and Behance persistence requires owner review/application of
+`supabase/team-social-links.sql`. This additive migration adds nullable text
+columns and aborts on unexpected schema/security state. It does not change rows,
+policies, authentication, storage permissions or publication settings. It has
+not been applied. Existing text-only edits omit absent link columns until needed.
+
+The new angular custom cursor covers public/admin desktop pages, including
+form fields and dialogs, with hover and press feedback. Native pointer hiding
+is activated only while the fine-pointer custom cursor is present. Touch input
+keeps normal platform behavior; reduced motion retains static cursor states.

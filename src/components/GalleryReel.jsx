@@ -1,3 +1,4 @@
+import DisplayImage from "./DisplayImage";
 import { useRef, useState } from 'react';
 import { useInView, useReducedMotion } from 'framer-motion';
 import { defaultPresentation, selectReelPhotos } from '../lib/presentationSettings';
@@ -18,7 +19,7 @@ export default function GalleryReel({ photos, onSelect, settings = defaultPresen
       <div className={`gallery-reel-track ${(settings.direction === 'right') !== Boolean(rowIndex) ? 'gallery-reel-reverse' : ''} ${reducedMotion || items.length < 2 ? 'gallery-reel-static' : ''}`} style={{ animationPlayState: paused || !inView ? 'paused' : 'running', animationDuration: `${(Number(settings.speedSeconds) || 48) + rowIndex * 6}s` }}>
         {[0, 1].map((copy) => <div className="gallery-reel-group" key={copy} aria-hidden={copy ? true : undefined}>
           {row.map((photo) => <button key={`${photo.album.id}-${photo.url}`} tabIndex={copy ? -1 : 0} onClick={() => onSelect(photo)} className="gallery-reel-frame" aria-label={`View ${photo.caption || photo.album.title}`}>
-            <img src={photo.url} alt={copy ? '' : photo.caption || photo.album.title} loading="lazy" />
+            <DisplayImage src={photo.url} settings={photo.album.photo_display?.[photo.url]} placement="photoReel" alt={copy ? '' : photo.caption || photo.album.title} loading="lazy" />
             <span className="gallery-reel-caption"><small>{photo.album.date}</small><strong>{photo.caption || photo.album.title}</strong></span>
           </button>)}
         </div>)}

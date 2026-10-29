@@ -1,3 +1,5 @@
+import { usePublicPreview } from "../hooks/usePublicCollection";
+import DisplayImage from "./DisplayImage";
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion as Motion, AnimatePresence } from "framer-motion";
@@ -12,20 +14,23 @@ export default function Navbar() {
   const navLinks = content.links.filter(link => link.path !== "/contact");
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobilePath, setMobilePath] = useState(null);
-  const location = useLocation();
+  const routerLocation = useLocation();
+  const preview = usePublicPreview();
+  const view = preview?.document?.defaultView || window;
+  const location = preview ? { ...routerLocation, pathname: preview.path } : routerLocation;
   const isMobileOpen = mobilePath === location.pathname;
 
   const handleNavClick = (isActive) => {
     if (isActive) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      view.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    const handleScroll = () => setIsScrolled(view.scrollY > 20);
+    view.addEventListener("scroll", handleScroll);
+    return () => view.removeEventListener("scroll", handleScroll);
+  }, [view]);
 
 
   return (
@@ -45,8 +50,8 @@ export default function Navbar() {
               onClick={() => handleNavClick(location.pathname === "/")}
               className="group flex items-center gap-3"
             >
-              <span className="text-xl md:text-2xl font-black tracking-[-0.03em] text-black font-serif transition-opacity group-hover:opacity-70">
-                <img src={content.logo} alt={content.logoAlt} className="w-32" />
+              <span style={{width:128,display:"block"}} className="text-xl md:text-2xl font-black tracking-[-0.03em] text-black font-serif transition-opacity group-hover:opacity-70">
+                <DisplayImage src={content.logo} settings={content.logo_display} placement="logo" alt={content.logoAlt} className="w-32" />
               </span>
             </Link>
 

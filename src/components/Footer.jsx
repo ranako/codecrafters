@@ -1,3 +1,4 @@
+import { usePublicPreview } from "../hooks/usePublicCollection";
 import { Link, useLocation } from "react-router-dom";
 import { motion as Motion } from "framer-motion";
 import { usePageContent } from "../hooks/usePageContent";
@@ -8,7 +9,9 @@ export default function Footer() {
   const content = shared.footer;
   const socialLinks = withContentIcons(shared.social.items);
   const currentYear = new Date().getFullYear();
-  const location = useLocation();
+  const routerLocation = useLocation();
+  const preview = usePublicPreview();
+  const location = preview ? { ...routerLocation, pathname: preview.path } : routerLocation;
 
   const handleSamePageClick = (path) => {
     if (location.pathname === path) {

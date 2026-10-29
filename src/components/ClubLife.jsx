@@ -1,22 +1,19 @@
+import DisplayImage from "./DisplayImage";
 import { usePageContent } from "../hooks/usePageContent";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import AlbumViewer from "./AlbumViewer";
+import { usePublicCollection } from "../hooks/usePublicCollection";
 import { fetchPastEventAlbums } from "../lib/contentApi";
 import { motion as Motion } from "framer-motion";
 import SectionWrapper, { SectionHeader } from "./SectionWrapper";
 
 export default function ClubLife() {
   const content = usePageContent("home").albums;
-  const [albums, setAlbums] = useState([]);
-  const [selected, setSelected] = useState(null);
-  const [status, setStatus] = useState("Loading community photos...");
-  useEffect(() => {
-    let active = true;
-    fetchPastEventAlbums().then((data) => { if (active) { setAlbums(data); setStatus(data.length ? "" : "Community photos will appear here when an album is published."); } })
-      .catch(() => { if (active) setStatus("Community photos could not be loaded. Please try again later."); });
-    return () => { active = false; };
-  }, []);
+  const [selected,setSelected] = useState(null);
+  const collection = usePublicCollection('albums', fetchPastEventAlbums);
+  const albums = collection.data;
+  const status = collection.loading ? 'Loading community photos...' : collection.error ? 'Community photos could not be loaded. Please try again later.' : albums.length ? '' : 'Community photos will appear here when an album is published.';
   return (
     <SectionWrapper>
       <SectionHeader
@@ -40,8 +37,8 @@ export default function ClubLife() {
             whileHover={{ scale: 1.03 }}
             className="w-full text-left mb-4 break-inside-avoid overflow-hidden border-2 border-black bg-white shadow-[4px_4px_0px_#2b2a27] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[0px_0px_0px_#2b2a27] transition-all duration-300"
           >
-            {(album.coverImage || album.photos[0]) && <img
-              src={album.coverImage || album.photos[0]}
+            {(album.coverImage || album.photos[0]) && <DisplayImage
+              src={album.coverImage || album.photos[0]} settings={album.cover_display} placement="albumHome"
               loading="lazy"
               alt={album.title}
               className="w-full h-auto object-cover grayscale opacity-90 hover:grayscale-0 hover:opacity-100 transition-all duration-500"

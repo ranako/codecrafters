@@ -1,3 +1,4 @@
+import DisplayImage from "./DisplayImage";
 
 import { motion as Motion, useReducedMotion } from "framer-motion";
 import Countdown from "./Countdown";
@@ -33,8 +34,8 @@ export default function EventCard({ event, index, isOpen, onToggle, status = eve
         {/* Top Section - Image */}
         {event.image && (
           <div className="event-card-image relative h-48 w-full overflow-hidden bg-[#e0e0e0] filter grayscale contrast-125 saturate-50 group-hover:grayscale-0 group-hover:saturate-100 transition-all duration-700 border-b-2 border-black/10">
-            <img 
-              src={event.image} 
+            <DisplayImage
+              src={event.image} settings={event.image_display} placement="eventCard"
               alt={event.title} 
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90"
             />

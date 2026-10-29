@@ -1,3 +1,4 @@
+import DisplayImage from "./DisplayImage";
 import { useEffect, useRef, useState } from 'react';
 
 export default function GalleryLightbox({ photos, initialIndex, events, onClose }) {
@@ -8,8 +9,9 @@ export default function GalleryLightbox({ photos, initialIndex, events, onClose 
   const active = photos[index];
   const event = events.find((item) => item.id === active.album.event_id);
   useEffect(() => {
-    const previous = document.activeElement;
     const node = dialog.current;
+    const document = node.ownerDocument;
+    const previous = document.activeElement;
     node.showModal();
     closeButton.current?.focus();
     const overflow = document.body.style.overflow;
@@ -34,7 +36,7 @@ export default function GalleryLightbox({ photos, initialIndex, events, onClose 
     </header>
     <div className="gallery-cinema-stage">
       <button className="gallery-photo-prev" onClick={() => advance(-1)} disabled={photos.length < 2} aria-label="Previous photo">←</button>
-      <img src={active.url} alt={active.caption || `${active.album.title}, photo ${active.index + 1}`} />
+      <DisplayImage src={active.url} settings={active.album.photo_display?.[active.url]} placement="photoViewer" alt={active.caption || `${active.album.title}, photo ${active.index + 1}`} />
       <button className="gallery-photo-next" onClick={() => advance(1)} disabled={photos.length < 2} aria-label="Next photo">→</button>
     </div>
     <footer className="gallery-cinema-footer">

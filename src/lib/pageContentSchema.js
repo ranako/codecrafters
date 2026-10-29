@@ -61,6 +61,8 @@ const memberFields = {
   role: text("Role"),
   image: image("Portrait"),
   linkedin: link("LinkedIn URL", ""),
+  github: link("GitHub URL", ""),
+  behance: link("Behance URL", ""),
 };
 const header = (title, description) => ({
   title: text("Heading", title),
@@ -470,7 +472,7 @@ export const pageSchemas = {
           {
             name: text("Name"),
             url: link("Profile URL", "https://"),
-            icon: icon("FaLinkedin"),
+            icon: { ...icon("FaLinkedin"), options: ["FaBehance","FaInstagram","FaGithub","FaLinkedin","FaDiscord","FaTwitter","FaGlobe"] },
           },
           socialLinks.map((v, i) => ({
             name: v.name,
@@ -483,21 +485,14 @@ export const pageSchemas = {
   },
 };
 
-export function fieldDefaults(fields) {
-  return Object.fromEntries(
-    Object.entries(fields).map(([key, field]) => [
-      key,
-      structuredClone(field.default),
-    ]),
-  );
-}
+export function fieldDefaults(fields) { return normalizeFields(fields); }
 export const defaultPageContent = Object.fromEntries(
   Object.entries(pageSchemas).map(([page, schema]) => [
     page,
     Object.fromEntries(
       Object.entries(schema.sections).map(([key, section]) => [
         key,
-        fieldDefaults(section.fields),
+        normalizeFields(section.fields),
       ]),
     ),
   ]),

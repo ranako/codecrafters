@@ -1,4 +1,7 @@
 import {
+  FaBehance,
+  FaGithub,
+  FaDiscord,
   FaCode,
   FaBrain,
   FaShieldAlt,
@@ -23,6 +26,9 @@ import {
   FaStar,
 } from "react-icons/fa";
 export const contentIcons = {
+  FaBehance,
+  FaGithub,
+  FaDiscord,
   FaCode,
   FaBrain,
   FaShieldAlt,

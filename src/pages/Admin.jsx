@@ -1,3 +1,6 @@
+import "../components/AdminControls.css";
+import ImageControls from "../components/ImageControls";
+import { replaceAlbumPhoto, removeAlbumPhoto } from "../lib/imageDisplay";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import {
@@ -50,7 +53,6 @@ import {
 import PageContentEditor from "../components/PageContentEditor";
 import { pageSchemas } from "../lib/pageContentSchema";
 import PresentationManager from "../components/PresentationManager";
-import EventModal from "../components/EventModal";
 import { registrationUrl, eventStatus, indiaDateTime, fromIndiaDateTime } from "../lib/eventUtils";
 
 const TABS = [
@@ -81,6 +83,8 @@ const EMPTY_ITEMS = {
     name: "New Member",
     role: "",
     linkedin: "",
+    github: "",
+    behance: "",
     image: "",
     is_active: true,
   },
@@ -208,13 +212,13 @@ async function deleteByTab(tabId, ids) {
 export default function Admin() {
   const [session, setSession] = useState(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const sessionUserId = session?.user?.id;
   const [emailInput, setEmailInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const [previewEvent, setPreviewEvent] = useState(null);
   const pendingAlbumEvent = useRef("");
   const [clock, setClock] = useState(Date.now);
   const [eventOptions, setEventOptions] = useState([]);
@@ -236,12 +240,21 @@ export default function Admin() {
   const [draggedPhoto, setDraggedPhoto] = useState(null);
   const [uploadingTarget, setUploadingTarget] = useState("");
 
+  const recordDirty = TABS.some(tab=>tab.id===activeTab.id) && JSON.stringify(formData)!==JSON.stringify(initialSnapshot);
+  useEffect(()=>{
+    if(!recordDirty && !isSaving && !uploadingTarget)return;
+    const warn=event=>{event.preventDefault();event.returnValue='';};
+    const guard=event=>{const anchor=event.target.closest?.('a[href]');if(!anchor || anchor.target==='_blank' || event.metaKey || event.ctrlKey)return;const url=new URL(anchor.href,location.href);if(url.origin===location.origin && url.pathname!==location.pathname && (isSaving || uploadingTarget || !window.confirm('Discard unsaved record changes and leave the editor?'))){event.preventDefault();event.stopPropagation();}};
+    window.addEventListener('beforeunload',warn);document.addEventListener('click',guard,true);
+    return()=>{window.removeEventListener('beforeunload',warn);document.removeEventListener('click',guard,true);};
+  },[recordDirty,isSaving,uploadingTarget]);
   const selectEditor = (tab, page = activePage) => {
     if (isSaving || uploadingTarget || pageBusy.current) return;
     if (tab.id === activeTab.id && page === activePage) return;
     const dirty = pageDirty.current || (TABS.some(item => item.id === activeTab.id) && JSON.stringify(formData) !== JSON.stringify(initialSnapshot));
     if (dirty && !window.confirm("You have unsaved changes. Discard them and switch sections?")) return;
     pageDirty.current = false;
+    setHasLoadedTab(false);setIsLoadingTab(TABS.some(item=>item.id===tab.id));setFormData([]);setInitialSnapshot([]);setInitialIds([]);setSuccess("");setTabError("");
     setActivePage(page);
     setActiveTab(tab);
   };
@@ -288,21 +301,21 @@ export default function Admin() {
   }, []);
 
   useEffect(() => {
-    if (!session) return;
+    if (!sessionUserId) return;
     const timer = setInterval(() => setClock(Date.now()), 1000);
     return () => clearInterval(timer);
-  }, [session]);
+  }, [sessionUserId]);
 
   useEffect(() => {
-    if (!session) return;
+    if (!sessionUserId) return;
     let active = true;
     fetchUpcomingEvents({ admin: true }).then((events) => { if (active) setEventOptions(events); })
       .catch(() => { if (active) setEventOptions([]); });
     return () => { active = false; };
-  }, [session, activeTab]);
+  }, [sessionUserId, activeTab]);
 
   useEffect(() => {
-    if (!session) {
+    if (!sessionUserId) {
       setFormData([]);
       setInitialSnapshot([]);
       setInitialIds([]);
@@ -351,7 +364,7 @@ export default function Admin() {
     return () => {
       isMounted = false;
     };
-  }, [activeTab, session]);
+  }, [activeTab, sessionUserId]);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -392,6 +405,7 @@ export default function Admin() {
     setTabError("");
     setSuccess("");
 
+    let recordsAcknowledged = false;
     try {
       for (const item of formData) {
         if (!(activeTab.id === "team" ? item.name : activeTab.id === "testimonials" ? item.name : item.title)?.trim()) {
@@ -425,16 +439,21 @@ export default function Admin() {
       );
 
       await saveByTab(activeTab.id, formData);
+      recordsAcknowledged = true;
       await deleteByTab(activeTab.id, deletedIds);
-      await deleteStorageFilesByUrls(removedStorageUrls);
 
       const refreshed = await fetchByTab(activeTab.id);
       setFormData(cloneData(refreshed));
       setInitialSnapshot(cloneData(refreshed));
       setInitialIds(getPersistedIds(refreshed));
       setSuccess("Saved to Supabase.");
+      window.dispatchEvent(new Event("cc-collections-saved"));
+      // File cleanup is secondary to the confirmed record save. A storage failure
+      // must not falsely report that persisted page content failed to save.
+      try { await deleteStorageFilesByUrls(removedStorageUrls); }
+      catch { setTabError("Content saved. Some unused image files could not be cleaned up; the files have been kept."); }
     } catch (error) {
-      setTabError(error.message || "Unable to publish changes.");
+      setTabError(recordsAcknowledged ? `Some changes may already be saved. Your draft has been kept; reload only after checking the saved page. ${error.message || "The remaining operation failed."}` : error.message || "Unable to publish changes.");
     } finally {
       setIsSaving(false);
     }
@@ -467,6 +486,7 @@ export default function Admin() {
   };
 
   const updateItem = (index, field, value) => {
+    if (isSaving) return;
     setFormData((current) =>
       current.map((item, itemIndex) =>
         itemIndex === index ? { ...item, [field]: value } : item,
@@ -475,11 +495,13 @@ export default function Admin() {
   };
 
   const deleteItem = (index) => {
+    if (isSaving || uploadingTarget) return;
     if (!window.confirm("Are you sure you want to delete this item?")) return;
     setFormData((current) => current.filter((_, itemIndex) => itemIndex !== index));
   };
 
   const addItem = (tabId) => {
+    if (isSaving || uploadingTarget) return;
     setFormData((current) => [
       ...current,
       { ...EMPTY_ITEMS[tabId], id: createTempId() },
@@ -487,26 +509,21 @@ export default function Admin() {
   };
 
   const moveCard = (fromIndex, toIndex) => {
+    if (isSaving || uploadingTarget) return;
     if (fromIndex === toIndex || fromIndex == null || toIndex == null) return;
     setFormData((current) => moveArrayItem(current, fromIndex, toIndex));
   };
 
   const updatePhoto = (itemIndex, photoIndex, value) => {
-    setFormData((current) =>
-      current.map((item, index) => {
-        if (index !== itemIndex) return item;
-
-        const nextPhotos = [...(item.photos || [])];
-        const previousUrl = nextPhotos[photoIndex];
-        nextPhotos[photoIndex] = value;
-        const captions = { ...item.photo_captions };
-        if (previousUrl && value && previousUrl !== value && captions[previousUrl] && !captions[value]) captions[value] = captions[previousUrl];
-        return { ...item, photos: nextPhotos, photo_captions: captions };
-      }),
-    );
+    const item = formData[itemIndex];
+    try {
+      const next = replaceAlbumPhoto(item,photoIndex,value);
+      setFormData(current=>current.map((entry,index)=>index===itemIndex?next:entry));
+    } catch(error) { setTabError(error.message); }
   };
 
   const addPhoto = (itemIndex) => {
+    if (isSaving || uploadingTarget) return;
     setFormData((current) =>
       current.map((item, index) =>
         index === itemIndex
@@ -516,26 +533,16 @@ export default function Admin() {
     );
   };
 
-  const removePhoto = (itemIndex, photoIndex) => {
-    setFormData((current) =>
-      current.map((item, index) => {
-        if (index !== itemIndex) return item;
-
-        return {
-          ...item,
-          photos: (item.photos || []).filter((_, indexToKeep) => indexToKeep !== photoIndex),
-        };
-      }),
-    );
-  };
+  const removePhoto = (itemIndex, photoIndex) => setFormData(current=>current.map((item,index)=>index===itemIndex?removeAlbumPhoto(item,photoIndex):item));
 
   const movePhoto = (itemIndex, fromIndex, toIndex) => {
+    if (isSaving || uploadingTarget) return;
     if (fromIndex === toIndex || fromIndex == null || toIndex == null) return;
 
     setFormData((current) =>
       current.map((item, index) => {
         if (index !== itemIndex) return item;
-        return { ...item, photos: moveArrayItem(item.photos || [], fromIndex, toIndex) };
+        return { ...item, photos: moveArrayItem(item.photos || [], fromIndex, toIndex), ...(item._photoDrafts ? {_photoDrafts: moveArrayItem((item.photos || []).map((_,position)=>item._photoDrafts[position]),fromIndex,toIndex)} : {}) };
       }),
     );
   };
@@ -667,6 +674,7 @@ export default function Admin() {
               value={value || ""}
               onChange={(event) => onChange(event.target.value)}
               className="w-full bg-white border-2 border-transparent focus:border-black rounded-lg px-4 py-2 text-sm text-black transition-colors outline-none"
+              aria-label={`${label} URL`}
               placeholder="https://example.com/image.jpg"
             />
           </div>
@@ -681,7 +689,7 @@ export default function Admin() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.1 }}
       key={item.id || index}
-      draggable
+      draggable={!isSaving && !uploadingTarget}
       onDragStart={() => setDraggedCardIndex(index)}
       onDragOver={(event) => event.preventDefault()}
       onDrop={() => {
@@ -715,10 +723,9 @@ export default function Admin() {
       </div>
 
       {activeTab.id === "upcoming" && <div className="flex flex-wrap items-center gap-4 mb-4 pl-2">
-        <button type="button" onClick={() => setPreviewEvent(item)} className="border-2 border-black px-3 py-2 text-sm font-bold">Preview event</button>
         <span className="text-xs font-bold uppercase">{eventStatus(item, clock)}{item.status_override ? " (manual)" : " (automatic)"}</span>
         <button type="button" disabled={!item.id || item.id.startsWith("temp-")} title={item.id?.startsWith("temp-") ? "Save the event before linking an album" : "Create an album for this event"}
-          onClick={() => { if (JSON.stringify(formData) !== JSON.stringify(initialSnapshot)) { setTabError("Save your event changes before creating an album."); return; } pendingAlbumEvent.current = item.id; setActiveTab(TABS.find((tab) => tab.id === "album")); }}
+          onClick={() => { if (JSON.stringify(formData) !== JSON.stringify(initialSnapshot)) { setTabError("Save your event changes before creating an album."); return; } pendingAlbumEvent.current = item.id; selectEditor(TABS.find((tab) => tab.id === "album")); }}
           className="border-2 border-black px-3 py-2 text-sm font-bold disabled:opacity-40">Add event album</button>
       </div>}
       <label className="flex items-center gap-3 mb-6 pl-2 font-bold text-sm">
@@ -726,7 +733,7 @@ export default function Admin() {
           onChange={(event) => updateItem(index, activeTab.id === "team" ? "is_active" : "is_published", event.target.checked)} />
         {activeTab.id === "team" ? "Active member" : "Published on website"}
       </label>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 pl-2">
+      <fieldset disabled={isSaving || Boolean(uploadingTarget)} className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 pl-2">
         {fields.map((field) => {
           if (field.type === "schedule") {
             return <label key={field.key} className="text-sm font-bold">{field.label}
@@ -782,6 +789,7 @@ export default function Admin() {
                   (nextValue) => updateItem(index, field.key, nextValue),
                   `${activeTab.id}-${index}-${field.key}`,
                 )}
+                <ImageControls src={item[field.key]} value={item[field.key==='coverImage'?'cover_display':'image_display']} onChange={value=>updateItem(index,field.key==='coverImage'?'cover_display':'image_display',value)} placements={activeTab.id==='upcoming'?['eventCard','eventHome','eventDetail']:activeTab.id==='team'?['member']:activeTab.id==='testimonials'?['avatar']:['albumHome','albumHanging']} disabled={isSaving || Boolean(uploadingTarget)} />
               </div>
             );
           }
@@ -847,7 +855,7 @@ export default function Admin() {
                   {photos.map((photo, photoIndex) => (
                     <div
                       key={`${item.id || index}-photo-${photoIndex}`}
-                      draggable
+                      draggable={!isSaving && !uploadingTarget}
                       onDragStart={() =>
                         setDraggedPhoto({ itemIndex: index, photoIndex })
                       }
@@ -933,6 +941,7 @@ export default function Admin() {
                           onChange={(event) => updateItem(index, "photo_captions", { ...item.photo_captions, [photo]: event.target.value })}
                           className="block w-full mt-2 bg-white border-2 border-black/20 rounded-lg px-4 py-2" />
                       </label>
+                      <div className="md:col-span-3"><ImageControls src={photo} value={item.photo_display?.[photo]} onChange={value=>updateItem(index,'photo_display',{...item.photo_display,[photo]:value})} placements={['photoGrid','photoReel','photoViewer']} disabled={isSaving || Boolean(uploadingTarget)} /></div>
                       <button
                         type="button"
                         onClick={() => removePhoto(index, photoIndex)}
@@ -979,7 +988,7 @@ export default function Admin() {
             </div>
           );
         })}
-      </div>
+      </fieldset>
     </Motion.div>
   );
 
@@ -1069,9 +1078,8 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-[80vh] bg-[#e6e4dc] pt-24 pb-16 px-6 md:px-12 lg:px-20 font-sans overflow-hidden">
-      {previewEvent && <EventModal event={previewEvent} status={eventStatus(previewEvent, clock)} onClose={() => setPreviewEvent(null)} />}
-      <div className="max-w-6xl mx-auto">
+    <div className="admin-panel min-h-[80vh] bg-[#e6e4dc] pt-24 pb-16 px-6 md:px-12 lg:px-20 font-sans overflow-x-clip">
+      <div className="max-w-[1680px] mx-auto">
         <Motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1145,8 +1153,8 @@ export default function Admin() {
             {["home", "events", "gallery"].includes(activePage) && <button type="button" onClick={() => selectEditor({ id: "presentation", label: "Appearance" })} className={`px-5 py-4 rounded-xl font-bold text-left ${activeTab.id === "presentation" ? "bg-black text-white" : "bg-white text-black/60"}`}>Appearance</button>}
           </Motion.div>
 
-          {activeTab.id === "page" ? <div className="flex-1 min-w-0 w-full"><PageContentEditor key={activePage} page={activePage} onDirtyChange={onPageDirtyChange} onBusyChange={onPageBusyChange} /></div> : activeTab.id === "presentation" ? <div className="flex-1 min-w-0 w-full"><PresentationManager onDirtyChange={onPageDirtyChange} onBusyChange={onPageBusyChange} /></div> : <div className="flex-1 min-w-0 w-full max-w-4xl">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 bg-white p-6 rounded-2xl border-2 border-black/10 shadow-sm relative overflow-hidden">
+          {activeTab.id === "page" ? <div className="flex-1 min-w-0 w-full"><PageContentEditor key={activePage} page={activePage} onDirtyChange={onPageDirtyChange} onBusyChange={onPageBusyChange} /></div> : activeTab.id === "presentation" ? <div className="flex-1 min-w-0 w-full"><PresentationManager onDirtyChange={onPageDirtyChange} onBusyChange={onPageBusyChange} /></div> : <div className="flex-1 min-w-0 w-full admin-editor-single"><div className="min-w-0 w-full">
+            <div className="admin-record-toolbar flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 bg-white p-6 rounded-2xl border-2 border-black/10 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-black/5 rounded-full -translate-y-12 translate-x-8 pointer-events-none"></div>
               <div>
                 <h2 className="text-2xl font-black text-black">{activeTab.label}</h2>
@@ -1175,13 +1183,14 @@ export default function Admin() {
                   ) : (
                     <FaSave size={14} />
                   )}{" "}
-                  {isSaving ? "Saving..." : success ? "Saved!" : "Publish Changes"}
+                  {isSaving ? "Saving..." : success && !recordDirty ? "Saved!" : "Publish Changes"}
                 </button>
               </div>
             </div>
 
+            {success && !recordDirty && <p role="status" className="mb-4 text-sm text-green-800 font-semibold">{success}</p>}
             {tabError && (
-              <div className="mb-6 rounded-2xl border-2 border-red-200 bg-red-50 px-5 py-4 text-sm font-bold text-red-600">
+              <div role="alert" className="mb-6 rounded-2xl border-2 border-red-200 bg-red-50 px-5 py-4 text-sm font-bold text-red-600">
                 {tabError}
               </div>
             )}
@@ -1243,6 +1252,8 @@ export default function Admin() {
                       renderCard(member, index, "name", [
                         { key: "name", label: "Name" },
                         { key: "role", label: "Role" },
+                        { key: "github", label: "GitHub URL (optional)", fullWidth: true },
+                        { key: "behance", label: "Behance URL (optional)", fullWidth: true },
                         {
                           key: "linkedin",
                           label: "LinkedIn URL",
@@ -1343,7 +1354,7 @@ export default function Admin() {
                 )}
               </div>
             )}
-          </div>}
+          </div></div>}
         </div>
       </div>
     </div>

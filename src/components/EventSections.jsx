@@ -1,6 +1,7 @@
 import { usePageContent } from '../hooks/usePageContent';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { usePublicCollection } from "../hooks/usePublicCollection";
 import { fetchEvents, fetchPastEventAlbums } from '../lib/contentApi';
 import { eventStart, eventStatus } from '../lib/eventUtils';
 import HomeEventSpotlight from "./HomeEventSpotlight";
@@ -11,25 +12,15 @@ export default function EventSections({ preview = false }) {
   const content = usePageContent("events").intro;
   const homeContent = usePageContent("home").events;
   const presentation = usePresentationSettings();
-  const [events, setEvents] = useState([]);
-  const [albums, setAlbums] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const eventCollection = usePublicCollection('events', fetchEvents);
+  const albumCollection = usePublicCollection('albums', fetchPastEventAlbums);
+  const events = eventCollection.data;
+  const albums = albumCollection.data;
+  const loading = eventCollection.loading || albumCollection.loading;
+  const error = eventCollection.error || albumCollection.error;
   const [openId, setOpenId] = useState(null);
   const [now, setNow] = useState(Date.now);
-  useEffect(() => {
-    let active = true;
-    const load = () => {
-      Promise.all([fetchEvents(), fetchPastEventAlbums()]).then(([nextEvents, nextAlbums]) => {
-        if (active) { setEvents(nextEvents); setAlbums(nextAlbums); setError(''); }
-      }).catch(() => { if (active) setError('Events could not be loaded. Please try again.'); })
-        .finally(() => { if (active) setLoading(false); });
-    };
-    load();
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    window.addEventListener('focus', load);
-    return () => { active = false; clearInterval(timer); window.removeEventListener('focus', load); };
-  }, []);
+  useEffect(() => { const timer=setInterval(()=>setNow(Date.now()),1000);return()=>clearInterval(timer); }, []);
   const statuses = preview ? ['live', 'upcoming'] : ['live', 'upcoming', 'past', 'unscheduled'];
   return <div className={`w-full relative z-10 ${preview ? 'py-12' : 'pt-28 pb-8'}`}>
     {!preview && <h1 className="text-4xl md:text-5xl font-black font-serif text-center mb-12">{content.title}</h1>}

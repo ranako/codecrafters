@@ -1,0 +1,21 @@
+.cc-display-image {
+  box-sizing: border-box;
+  flex-shrink: 1;
+}
+.cc-display-image > img {
+  max-width: 100%;
+}
+.cc-image-fallback {
+  display: grid;
+  place-items: center;
+  min-height: 48px;
+  background: #dedcd4;
+  color: #605e55;
+  font:
+    12px/1.5 ui-sans-serif,
+    system-ui,
+    sans-serif;
+  padding: 8px;
+  text-align: center;
+  overflow: hidden;
+}

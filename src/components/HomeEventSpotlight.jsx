@@ -1,3 +1,4 @@
+import DisplayImage from "./DisplayImage";
 import { usePageContent } from '../hooks/usePageContent';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -20,7 +21,7 @@ export default function HomeEventSpotlight({ event }) {
         <Countdown startsAt={event.starts_at} targetDate={event.date} targetTime={event.time} small />
         <div className="home-event-actions"><button onClick={() => setOpen(true)}>{content.exploreLabel} →</button>{url && <a href={url} target="_blank" rel="noopener noreferrer">{content.registerLabel} ↗</a>}</div>
       </div>
-      {event.image && <button className="home-event-photo" onClick={() => setOpen(true)} aria-label={`Explore ${event.title}`}><img src={event.image} alt={event.title} /></button>}
+      {event.image && <button className="home-event-photo" onClick={() => setOpen(true)} aria-label={`Explore ${event.title}`}><DisplayImage src={event.image} settings={event.image_display} placement="eventHome" alt={event.title} /></button>}
     </div>
     {open && <EventModal event={event} status="upcoming" onClose={() => setOpen(false)} />}
   </section>;

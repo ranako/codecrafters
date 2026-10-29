@@ -1,3 +1,4 @@
+import DisplayImage from "./DisplayImage";
 import { useEffect, useRef, useState } from 'react';
 
 export default function AlbumViewer({ album, onClose, initialIndex = 0 }) {
@@ -5,8 +6,9 @@ export default function AlbumViewer({ album, onClose, initialIndex = 0 }) {
   const [index, setIndex] = useState(initialIndex);
   const photos = [...new Set(album.photos?.filter(Boolean).length ? album.photos.filter(Boolean) : album.coverImage ? [album.coverImage] : [])];
   useEffect(() => {
-    const previous = document.activeElement;
     const node = dialog.current;
+    const document = node.ownerDocument;
+    const previous = document.activeElement;
     node.showModal();
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -23,7 +25,7 @@ export default function AlbumViewer({ album, onClose, initialIndex = 0 }) {
         <button autoFocus onClick={onClose} aria-label="Close photo album" className="border-2 border-black px-3 py-2 font-bold hover:bg-black hover:text-white">✕</button>
       </div>
       <p className="text-sm mb-4">{album.description}</p>
-      {photos.length ? <img src={photos[index]} alt={album.photo_captions?.[photos[index]] || `${album.title}, photo ${index + 1}`} className="w-full max-h-[60vh] object-contain bg-black/5" /> : <p>No photos have been added to this album.</p>}
+      {photos.length ? <DisplayImage src={photos[index]} settings={album.photo_display?.[photos[index]] || album.cover_display} placement="photoViewer" alt={album.photo_captions?.[photos[index]] || `${album.title}, photo ${index + 1}`} className="w-full max-h-[60vh] object-contain bg-black/5" /> : <p>No photos have been added to this album.</p>}
       {album.photo_captions?.[photos[index]] && <p className="text-sm mt-3">{album.photo_captions[photos[index]]}</p>}
       {photos.length > 0 && <div className="flex items-center justify-between gap-4 mt-5">
         <button disabled={photos.length < 2} onClick={() => advance(-1)} className="border-2 border-black px-4 py-2 disabled:opacity-40">Previous</button>

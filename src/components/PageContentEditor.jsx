@@ -1,3 +1,4 @@
+import ImageControls from "./ImageControls";
 import { useEffect, useId, useState, useCallback } from "react";
 import {
   pageSchemas,
@@ -9,7 +10,16 @@ import { fetchPageContent, savePageContent } from "../lib/pageContentApi";
 import { uploadImageFile } from "../lib/storageApi";
 import "./PageContentEditor.css";
 
-function ContentField({ field, value, onChange, path, busy, onUploadChange }) {
+function ContentField({
+  field,
+  value,
+  onChange,
+  path,
+  busy,
+  onUploadChange,
+  displayValue,
+  onDisplayChange,
+}) {
   const id = useId();
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -78,6 +88,16 @@ function ContentField({ field, value, onChange, path, busy, onUploadChange }) {
                   key={key}
                   field={child}
                   value={item[key]}
+                  displayValue={item[`${key}_display`]}
+                  onDisplayChange={(next) =>
+                    onChange(
+                      items.map((entry, i) =>
+                        i === index
+                          ? { ...entry, [`${key}_display`]: next }
+                          : entry,
+                      ),
+                    )
+                  }
                   busy={busy}
                   onUploadChange={onUploadChange}
                   path={`${path}/${index}/${key}`}
@@ -119,7 +139,7 @@ function ContentField({ field, value, onChange, path, busy, onUploadChange }) {
     );
   return (
     <div
-      className={`cms-field ${["textarea", "image"].includes(field.type) ? "cms-wide" : ""}`}
+      className={`cms-field ${["textarea", "image", "icon"].includes(field.type) ? "cms-wide" : ""}`}
     >
       <label htmlFor={id}>{field.label}</label>
       {field.type === "textarea" ? (
@@ -139,7 +159,7 @@ function ContentField({ field, value, onChange, path, busy, onUploadChange }) {
             disabled={busy}
             onChange={(e) => onChange(e.target.value)}
           >
-            {Object.keys(contentIcons).map((key) => (
+            {(field.options || Object.keys(contentIcons)).map((key) => (
               <option key={key} value={key}>
                 {key.replace(/^Fa/, "").replace(/([a-z])([A-Z])/g, "$1 $2")}
               </option>
@@ -202,6 +222,19 @@ function ContentField({ field, value, onChange, path, busy, onUploadChange }) {
             Upload an image or paste its URL above. Save the page to publish it.
           </small>
           {uploadError && <p role="alert">{uploadError}</p>}
+          <ImageControls
+            src={value}
+            value={displayValue}
+            onChange={onDisplayChange}
+            placements={
+              path.startsWith("shared/")
+                ? ["logo"]
+                : path.startsWith("team/")
+                  ? ["member"]
+                  : ["about"]
+            }
+            disabled={busy || uploading}
+          />
         </div>
       )}
     </div>
@@ -321,123 +354,132 @@ export default function PageContentEditor({
       </div>
     );
   return (
-    <form className="cms-page-editor" onSubmit={submit}>
-      <div className="cms-editor-heading">
-        <div>
-          <h2>{schema.label}</h2>
-          <p>
-            Edit the page content below. The existing layout and animations stay
-            the same.
-          </p>
+    <div className="admin-editor-single">
+      <form className="cms-page-editor" onSubmit={submit}>
+        <div className="cms-editor-heading">
+          <div>
+            <h2>{schema.label}</h2>
+            <p>
+              Edit the page content below. The existing layout and animations
+              stay the same.
+            </p>
+          </div>
+          <a href={schema.path} target="_blank" rel="noopener noreferrer">
+            View saved page ↗
+          </a>
         </div>
-        <a href={schema.path} target="_blank" rel="noopener noreferrer">
-          View saved page ↗
-        </a>
-      </div>
-      {error && (
-        <div className="cms-error" role="alert">
-          {error}
-          {!ready && (
-            <button
-              type="button"
-              onClick={() => {
-                setError("");
-                setLoading(true);
-                setAttempt((v) => v + 1);
-              }}
-            >
-              Retry loading
-            </button>
-          )}
-        </div>
-      )}
-      {message && (
-        <p className="cms-success" role="status">
-          {message}
-        </p>
-      )}
-      {!ready ? (
-        <p className="cms-hint">
-          Editing is disabled until the saved content can be read. Your current
-          website remains available.
-        </p>
-      ) : (
-        <>
-          <div className="cms-save-bar">
-            <span role="status">
-              {dirty ? "Unsaved changes" : "All changes saved"}
-            </span>
-            <div>
+        {error && (
+          <div className="cms-error" role="alert">
+            {error}
+            {!ready && (
               <button
                 type="button"
-                className="cms-secondary"
-                disabled={busy || !dirty}
                 onClick={() => {
-                  if (
-                    window.confirm("Discard the unsaved changes to this page?")
-                  ) {
-                    setDraft(structuredClone(snapshot));
-                    setError("");
-                    setMessage("");
-                  }
+                  setError("");
+                  setLoading(true);
+                  setAttempt((v) => v + 1);
                 }}
               >
-                Discard changes
+                Retry loading
               </button>
-              <button
-                type="submit"
-                className="cms-primary"
-                disabled={busy || !dirty}
-              >
-                {saving ? "Saving…" : "Save page"}
-              </button>
-            </div>
-          </div>
-          <fieldset disabled={busy} className="cms-sections">
-            {Object.entries(schema.sections).map(
-              ([section, definition], index) => (
-                <details
-                  key={section}
-                  open={index === 0}
-                  className="cms-section"
-                >
-                  <summary>{definition.label}</summary>
-                  <div className="cms-field-grid">
-                    {Object.entries(definition.fields).map(([key, field]) => (
-                      <ContentField
-                        key={key}
-                        field={field}
-                        value={draft[section][key]}
-                        path={`${page}/${section}/${key}`}
-                        busy={busy}
-                        onUploadChange={uploadChange}
-                        onChange={(value) => change(section, key, value)}
-                      />
-                    ))}
-                  </div>
-                </details>
-              ),
             )}
-          </fieldset>
-          <button
-            type="button"
-            className="cms-restore"
-            disabled={busy}
-            onClick={() => {
-              if (
-                window.confirm(
-                  "Load the original page content into this draft? This replaces the current draft. Nothing is published until you save.",
-                )
-              ) {
-                setDraft(structuredClone(defaultPageContent[page]));
-                setMessage("");
-              }
-            }}
-          >
-            Load original content into draft
-          </button>
-        </>
-      )}
-    </form>
+          </div>
+        )}
+        {message && (
+          <p className="cms-success" role="status">
+            {message}
+          </p>
+        )}
+        {!ready ? (
+          <p className="cms-hint">
+            Editing is disabled until the saved content can be read. Your
+            current website remains available.
+          </p>
+        ) : (
+          <>
+            <div className="cms-save-bar">
+              <span role="status">
+                {dirty ? "Unsaved changes" : "All changes saved"}
+              </span>
+              <div>
+                <button
+                  type="button"
+                  className="cms-secondary"
+                  disabled={busy || !dirty}
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        "Discard the unsaved changes to this page?",
+                      )
+                    ) {
+                      setDraft(structuredClone(snapshot));
+                      setError("");
+                      setMessage("");
+                    }
+                  }}
+                >
+                  Discard changes
+                </button>
+                <button
+                  type="submit"
+                  className="cms-primary"
+                  disabled={busy || !dirty}
+                >
+                  {saving ? "Saving…" : "Save page"}
+                </button>
+              </div>
+            </div>
+            <fieldset disabled={busy} className="cms-sections">
+              {Object.entries(schema.sections).map(
+                ([section, definition], index) => (
+                  <details
+                    key={section}
+                    open={index === 0}
+                    className="cms-section"
+                  >
+                    <summary>{definition.label}</summary>
+                    <div className="cms-field-grid">
+                      {Object.entries(definition.fields).map(([key, field]) => (
+                        <ContentField
+                          key={key}
+                          field={field}
+                          value={draft[section][key]}
+                          displayValue={draft[section][`${key}_display`]}
+                          onDisplayChange={(value) =>
+                            change(section, `${key}_display`, value)
+                          }
+                          path={`${page}/${section}/${key}`}
+                          busy={busy}
+                          onUploadChange={uploadChange}
+                          onChange={(value) => change(section, key, value)}
+                        />
+                      ))}
+                    </div>
+                  </details>
+                ),
+              )}
+            </fieldset>
+            <button
+              type="button"
+              className="cms-restore"
+              disabled={busy}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Load the original page content into this draft? This replaces the current draft. Nothing is published until you save.",
+                  )
+                ) {
+                  setDraft(structuredClone(defaultPageContent[page]));
+                  setMessage("");
+                }
+              }}
+            >
+              Load original content into draft
+            </button>
+          </>
+        )}
+      </form>
+
+    </div>
   );
 }

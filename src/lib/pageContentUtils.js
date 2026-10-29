@@ -1,3 +1,4 @@
+import { normalizeImageDisplay } from "./imageDisplay.js";
 export function safeContentLink(value, fallback = "") {
   if (typeof value !== "string") return fallback;
   const clean = value.trim();
@@ -32,7 +33,7 @@ export function safeImage(value) {
   }
 }
 export function normalizeFields(fields, input = {}) {
-  return Object.fromEntries(
+  const result = Object.fromEntries(
     Object.entries(fields).map(([key, field]) => {
       const value = input?.[key];
       let result = structuredClone(field.default);
@@ -55,6 +56,12 @@ export function normalizeFields(fields, input = {}) {
       return [key, result];
     }),
   );
+  for (const [key, field] of Object.entries(fields))
+    if (field.type === "image")
+      result[`${key}_display`] = normalizeImageDisplay(
+        input?.[`${key}_display`],
+      );
+  return result;
 }
 
 export function validateFields(fields, data, label) {

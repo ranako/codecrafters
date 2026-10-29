@@ -1,0 +1,5 @@
+.admin-editor-single { display: block; width: 100%; min-width: 0; }
+.admin-panel select { width: 100%; min-width: 0; min-height: 46px; padding: 10px 40px 10px 14px; border: 2px solid #2b2a27; border-radius: 8px; background-color: #fffdf8; font: inherit; line-height: 1.4; }
+.admin-panel select:focus-visible { outline: 3px solid #66844d; outline-offset: 3px; }
+.admin-panel .cms-icon-select { display: grid; grid-template-columns: minmax(0, 1fr) 28px; gap: 14px; }
+.admin-panel :is(.image-controls, .cms-page-editor, .appearance-manager) select { min-height: 46px; border: 2px solid #2b2a27; padding: 10px 40px 10px 14px; }

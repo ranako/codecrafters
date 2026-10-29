@@ -1,8 +1,10 @@
+import DisplayImage from "./DisplayImage";
 import { usePageContent } from "../hooks/usePageContent";
 import { useInView, useReducedMotion } from "framer-motion";
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
 import SectionWrapper, { SectionHeader } from "./SectionWrapper";
 import { FaQuoteLeft } from "react-icons/fa";
+import { usePublicCollection } from "../hooks/usePublicCollection";
 import { fetchTestimonials } from "../lib/contentApi";
 
 export default function TestimonialsMarquee() {
@@ -11,10 +13,10 @@ export default function TestimonialsMarquee() {
   const inView = useInView(track);
   const reducedMotion = useReducedMotion();
   const [paused, setPaused] = useState(false);
-  const [testimonials, setTestimonials] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  
+  const collection = usePublicCollection('testimonials', fetchTestimonials);
+  const testimonials = collection.data;
+  const isLoading = collection.loading;
+  const error = collection.error;
   const pastelColors = [
     "bg-[#e3ebd5]", // Sage
     "bg-[#dce4f0]", // Slate
@@ -22,33 +24,6 @@ export default function TestimonialsMarquee() {
     "bg-[#e6dcf0]", // Lilac
     "bg-[#f0ecd5]", // Pale Yellow
   ];
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadTestimonials() {
-      try {
-        const data = await fetchTestimonials();
-        if (!isMounted) return;
-        setTestimonials(data);
-        setError("");
-      } catch (fetchError) {
-        if (!isMounted) return;
-        setTestimonials([]);
-        setError(fetchError.message || "Unable to load testimonials.");
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    loadTestimonials();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   const looping = testimonials.length > 1 && !reducedMotion;
   const repeatedTestimonials = looping ? [...testimonials, ...testimonials] : testimonials;
@@ -86,10 +61,20 @@ export default function TestimonialsMarquee() {
             <div className={`testimonial-track flex gap-6 md:gap-8 w-max ${looping ? "is-looping" : ""}`}
               style={{ animationPlayState: paused || !inView ? "paused" : "running" }}>
               {repeatedTestimonials.map((testimonial, i) => (
+                <TestimonialCard key={`${testimonial.id}-${i}`} testimonial={testimonial} hidden={looping && i >= testimonials.length} color={pastelColors[(i % testimonials.length) % pastelColors.length]} />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </SectionWrapper>
+  );
+}
+
+export function TestimonialCard({testimonial,hidden=false,color="bg-[#e3ebd5]"}) { return (
                 <div
-                  key={`${testimonial.id}-${i}`}
-                  aria-hidden={looping && i >= testimonials.length ? true : undefined}
-                  className={`w-[300px] md:w-[400px] ${pastelColors[(i % testimonials.length) % pastelColors.length]} p-8 border-2 border-black shadow-[6px_6px_0px_#2b2a27] flex flex-col justify-between whitespace-normal`}
+                  aria-hidden={hidden || undefined}
+                  className={`w-[300px] md:w-[400px] ${color} p-8 border-2 border-black shadow-[6px_6px_0px_#2b2a27] flex flex-col justify-between whitespace-normal`}
                 >
                   <div>
                     <FaQuoteLeft className="text-black/10 text-3xl mb-4" />
@@ -99,8 +84,8 @@ export default function TestimonialsMarquee() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 shrink-0 flex items-center justify-center overflow-hidden border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-                      {testimonial.avatar && <img
-                        src={testimonial.avatar}
+                      {testimonial.avatar && <DisplayImage
+                        src={testimonial.avatar} settings={testimonial.image_display} placement="avatar"
                         alt={testimonial.name}
                         className="w-full h-full object-cover"
                       />}
@@ -116,11 +101,4 @@ export default function TestimonialsMarquee() {
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    </SectionWrapper>
-  );
-}
+); }

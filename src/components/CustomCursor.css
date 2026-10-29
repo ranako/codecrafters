@@ -1,0 +1,11 @@
+html.cc-cursor-enabled, html.cc-cursor-enabled *, html.cc-cursor-enabled *::before, html.cc-cursor-enabled *::after { cursor: none !important; }
+.cc-cursor { position: fixed; inset: 0 auto auto 0; width: 1px; height: 1px; margin: 0; padding: 0; border: 0; overflow: visible; background: transparent; color: #fff; mix-blend-mode: difference; pointer-events: none; z-index: 2147483647; opacity: 0; }
+.cc-cursor[data-visible="true"] { opacity: 1; }
+.cc-cursor::backdrop { display: none; }
+.cc-cursor-frame { position: absolute; width: 20px; height: 20px; top: -10px; left: -10px; border: 1.5px solid currentColor; clip-path: polygon(0 0,35% 0,35% 20%,65% 20%,65% 0,100% 0,100% 35%,80% 35%,80% 65%,100% 65%,100% 100%,65% 100%,65% 80%,35% 80%,35% 100%,0 100%,0 65%,20% 65%,20% 35%,0 35%); transform: rotate(-45deg); transition: transform 160ms cubic-bezier(.23,1,.32,1); }
+.cc-cursor-dot { position: absolute; top: -2px; left: -2px; width: 4px; height: 4px; background: currentColor; border-radius: 50%; }
+.cc-cursor[data-interactive="true"] .cc-cursor-frame { transform: rotate(0deg) scale(1.45); }
+.cc-cursor[data-pressed="true"] .cc-cursor-frame { transform: rotate(45deg) scale(.75); transition-duration: 100ms; }
+.cc-cursor-pulse { position: absolute; top: 0; left: 0; width: 22px; height: 22px; border: 1px solid currentColor; border-radius: 50%; opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .cc-cursor-frame { transition: none; } }
+@media (hover: none), (pointer: coarse) { .cc-cursor { display: none; } }

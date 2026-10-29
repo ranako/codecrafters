@@ -28,7 +28,7 @@
 /* Keep the archive composition, but give captions their own paper strip. */
 .cc-gallery .gallery-archive-frame { display: flex; flex-direction: column; padding: 12px 12px 0; background: #f5f3eb; color: #2b2a27; border: 1px solid #2b2a2722; border-radius: 2px; box-shadow: 0 8px 16px -12px #49433355; }
 .cc-gallery .gallery-archive-frame::after { display: none; }
-.cc-gallery .gallery-archive-frame > img { flex: 1; min-height: 0; object-fit: cover; }
+.cc-gallery .gallery-archive-frame > :is(img,.cc-display-image,.cc-image-fallback) { flex: 1; min-height: 0; object-fit: cover; }
 .cc-gallery .gallery-frame-top { display: none; }
 .cc-gallery .gallery-frame-info { position: static; flex: 0 0 auto; padding: 12px 4px; gap: 4px; }
 .cc-gallery .gallery-frame-info > small { color: #605e55; font-size: 10px; }
@@ -43,7 +43,7 @@
 .gallery-loading > div > span { display: block; height: 16px; width: 65%; margin-top: 16px; background: #d8d5cb; }
 .gallery-cinema :is(button,a) { min-height: 44px; transition: background-color 160ms ease, transform 140ms cubic-bezier(.23,1,.32,1); }
 .gallery-cinema :is(button,a):active { scale: .97; }
-.gallery-cinema-stage img { max-width: 100%; }
+.gallery-cinema-stage > :is(img,.cc-display-image,.cc-image-fallback) { max-width: 100%; }
 @media (hover: hover) and (pointer: fine) { .cc-gallery .gallery-archive-frame:hover > img { transform: scale(1.015); } .gallery-cinema :is(button,a):hover { background: #45453e; } }
 @media (max-width: 767px) {
   .about-polish { padding-top: 112px; }
@@ -84,7 +84,7 @@
 .home-polish .home-paper-stats [class*='text-black/40'] { color: #605e55; }
 .home-polish .home-community-albums > section { padding-block: 40px; }
 .home-polish .home-community-albums > section > div > div > div:first-child { margin-bottom: 32px; }
-.home-polish .home-community-albums img { aspect-ratio: 4 / 3; object-fit: cover; }
+.home-polish .home-community-albums :is(img,.cc-display-image,.cc-image-fallback) { aspect-ratio: 4 / 3; object-fit: cover; }
 .home-polish .home-feedback > section { padding-block: 24px; }
 .home-polish .home-feedback .testimonial-window { padding-block: 24px; }
 .home-polish .home-join-note > div { position: relative; }
