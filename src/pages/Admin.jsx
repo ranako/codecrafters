@@ -689,8 +689,6 @@ export default function Admin() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.1 }}
       key={item.id || index}
-      draggable={!isSaving && !uploadingTarget}
-      onDragStart={() => setDraggedCardIndex(index)}
       onDragOver={(event) => event.preventDefault()}
       onDrop={() => {
         moveCard(draggedCardIndex, index);
@@ -706,6 +704,13 @@ export default function Admin() {
           <span
             className="cursor-grab text-black/30 group-hover:text-black/60 transition-colors"
             title="Drag to reorder"
+            draggable={!isSaving && !uploadingTarget}
+            onDragStart={(event) => {
+              event.stopPropagation();
+              event.dataTransfer.effectAllowed = "move";
+              event.dataTransfer.setData("text/plain", String(index));
+              setDraggedCardIndex(index);
+            }}
           >
             <FaGripVertical size={16} />
           </span>
@@ -855,10 +860,6 @@ export default function Admin() {
                   {photos.map((photo, photoIndex) => (
                     <div
                       key={`${item.id || index}-photo-${photoIndex}`}
-                      draggable={!isSaving && !uploadingTarget}
-                      onDragStart={() =>
-                        setDraggedPhoto({ itemIndex: index, photoIndex })
-                      }
                       onDragOver={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
@@ -902,6 +903,13 @@ export default function Admin() {
                         <span
                           className="cursor-grab text-black/30 group-hover:text-black/60 transition-colors"
                           title="Drag to reorder photo"
+                          draggable={!isSaving && !uploadingTarget}
+                          onDragStart={(event) => {
+                            event.stopPropagation();
+                            event.dataTransfer.effectAllowed = "move";
+                            event.dataTransfer.setData("text/plain", String(photoIndex));
+                            setDraggedPhoto({ itemIndex: index, photoIndex });
+                          }}
                         >
                           <FaGripVertical size={16} />
                         </span>

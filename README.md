@@ -255,7 +255,11 @@ columns and aborts on unexpected schema/security state. It does not change rows,
 policies, authentication, storage permissions or publication settings. It has
 not been applied. Existing text-only edits omit absent link columns until needed.
 
-The new angular custom cursor covers public/admin desktop pages, including
-form fields and dialogs, with hover and press feedback. Native pointer hiding
+The custom circular cursor covers public/admin desktop pages, including
+form fields and dialogs, with brief hover and press feedback. Text fields use a
+custom caret, sliders use horizontal arrows, and drag handles use move arrows.
+The center dot tracks immediately; the larger ring follows with a short,
+frame-rate-independent delay and stops animating when settled. Reduced motion
+removes the delay. There is no idle animation. Native pointer hiding
 is activated only while the fine-pointer custom cursor is present. Touch input
 keeps normal platform behavior; reduced motion retains static cursor states.

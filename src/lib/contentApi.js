@@ -5,6 +5,8 @@ function isTemporaryId(id) {
   return !id || typeof id !== "string" || id.startsWith("temp-");
 }
 
+// Bulk upserts below use missing=default so new rows receive database IDs
+// when saved alongside existing rows. Existing IDs remain unchanged.
 function withSortOrder(items, mapItem) {
   return items.map((item, index) => {
     const mapped = mapItem(item, index);
@@ -146,7 +148,7 @@ export async function saveUpcomingEvents(items) {
   }));
 
   return runQuery(
-    supabase.from("upcoming_events").upsert(payload).select("*"),
+    supabase.from("upcoming_events").upsert(payload, { defaultToNull: false }).select("*"),
   );
 }
 
@@ -184,7 +186,7 @@ export async function saveCoreTeamMembers(items) {
     is_active: item.is_active ?? true,
   }));
 
-  return runQuery(supabase.from("team_members").upsert(payload).select("*"));
+  return runQuery(supabase.from("team_members").upsert(payload, { defaultToNull: false }).select("*"));
 }
 
 export async function deleteCoreTeamMembers(ids) {
@@ -215,7 +217,7 @@ export async function saveTestimonials(items) {
     is_published: item.is_published ?? true,
   }));
 
-  return runQuery(supabase.from("testimonials").upsert(payload).select("*"));
+  return runQuery(supabase.from("testimonials").upsert(payload, { defaultToNull: false }).select("*"));
 }
 
 export async function deleteTestimonials(ids) {
@@ -251,7 +253,7 @@ export async function savePastEventAlbums(items) {
   }));
 
   return runQuery(
-    supabase.from("past_event_albums").upsert(payload).select("*"),
+    supabase.from("past_event_albums").upsert(payload, { defaultToNull: false }).select("*"),
   );
 }
 

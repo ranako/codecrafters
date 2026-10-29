@@ -284,6 +284,12 @@ const base = process.env.CC_TEST_URL || "http://127.0.0.1:5173";
   }
   await page.getByLabel('GitHub URL (optional)',{exact:true}).hover();
   assert.equal(await page.getByLabel('GitHub URL (optional)',{exact:true}).evaluate(n=>getComputedStyle(n).cursor),'none');
+  assert.equal(await page.locator('.cc-cursor').getAttribute('data-mode'),'text');
+  await page.getByRole('slider').first().hover();
+  assert.equal(await page.locator('.cc-cursor').getAttribute('data-mode'),'range');
+  await page.locator('[title="Drag to reorder"]').first().hover();
+  assert.equal(await page.locator('.cc-cursor').getAttribute('data-mode'),'grab');
+
   await visitor.evaluate(()=>{const d=document.createElement('dialog');d.innerHTML='<button>Cursor dialog check</button>';document.body.append(d);d.showModal();});
   await visitor.getByRole('button',{name:'Cursor dialog check'}).hover();
   assert.equal(await visitor.locator('.cc-cursor').evaluate(n=>n.matches(':popover-open')),true);
