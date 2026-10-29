@@ -76,7 +76,7 @@ export default function Contact() {
          initial={{ opacity: 0, scale: 0.9, y: 16, rotate: "2deg" }}
          animate={{ opacity: 1, scale: 1, y: 0, rotate: "-1deg" }}
          transition={{ duration: 0.4, type: "spring", bounce: 0.1 }}
-         className="relative w-full max-w-5xl bg-[#fffef5] border border-black/10 shadow-[0_25px_50px_-15px_rgba(0,0,0,0.2)] flex flex-col md:flex-row p-8 md:p-14 z-10"
+         className="contact-postcard relative w-full max-w-5xl bg-[#fffef5] border border-black/10 shadow-[0_25px_50px_-15px_rgba(0,0,0,0.2)] flex flex-col md:flex-row p-8 md:p-14 z-10"
       >
         {/* Postcard Stamp - Lilac Accent */}
         <div className="absolute top-8 right-8 w-20 h-24 flex items-center justify-center rotate-[15deg] pointer-events-none z-30">
@@ -88,7 +88,7 @@ export default function Contact() {
         </div>
 
         {/* Left Side: Form (The Message side of postcard) */}
-        <div className="w-full md:w-1/2 md:pr-14 md:border-r-[3px] border-double border-black/10 relative z-20">
+        <div className="contact-form-side w-full md:w-1/2 md:pr-14 md:border-r-[3px] border-double border-black/10 relative z-20">
            <h1 className="text-4xl font-black font-serif text-black mb-8">
              {contactData.tagline}
            </h1>
@@ -172,7 +172,7 @@ export default function Contact() {
         </div>
 
         {/* Right Side: Destination Address (The Address side of postcard) */}
-        <div className="w-full md:w-1/2 md:pl-16 pt-16 md:pt-24 flex flex-col relative z-20">
+        <div className="contact-address-side w-full md:w-1/2 md:pl-16 pt-16 md:pt-24 flex flex-col relative z-20">
            
            <div className="space-y-12">
              <div className="border-b-2 border-black/20 pb-2 flex flex-col items-end text-right">
@@ -188,7 +188,7 @@ export default function Contact() {
 
              <div className="pb-2 flex flex-col items-end text-right">
                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30">{content.delivery.socialLabel}</span>
-                <div className="flex gap-4 mt-4">
+                <div className="contact-social flex gap-4 mt-4">
                   {socialLinks.map((s) => (
                     <a
                       key={s.name}

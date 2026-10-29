@@ -263,3 +263,17 @@ frame-rate-independent delay and stops animating when settled. Reduced motion
 removes the delay. There is no idle animation. Native pointer hiding
 is activated only while the fine-pointer custom cursor is present. Touch input
 keeps normal platform behavior; reduced motion retains static cursor states.
+
+### Responsive fit
+
+The public pages and page manager retain their existing composition, colors and
+motion. `src/responsive.css` adjusts cramped navigation/footer columns, postcard
+padding, pillar captions and admin form spacing at smaller widths. Mobile menus
+scroll within short viewports; mobile form fields use readable input sizes.
+
+The optional mocked browser checks are `tests/browser/responsive.e2e.cjs` (all
+seven routes at 320, 390, 768, 1024 and 1440 pixels) and
+`tests/browser/responsiveInteractions.e2e.cjs` (short-screen navigation, narrow
+photo/event dialogs and admin collection controls). They do not write live data.
+
+The main navigation is a bottom floating dock with icon links and an active-page pill. On mobile it keeps the logo/Join action and opens the page list above the dock. The cursor remains a round dot and trailing ring over the logo, without a logo-specific hover effect. Other controls gently expand the ring; clicking adds a short ripple. The optional mocked check is tests/browser/navbarDock.e2e.cjs.

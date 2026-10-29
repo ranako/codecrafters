@@ -3,20 +3,19 @@ html.cc-cursor-enabled, html.cc-cursor-enabled *, html.cc-cursor-enabled *::befo
 .cc-cursor[data-visible="true"] { opacity: 1; }
 .cc-cursor::backdrop { display: none; }
 .cc-cursor svg { position: absolute; overflow: visible; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity 100ms ease, transform 140ms cubic-bezier(.23,1,.32,1); }
-.cc-cursor svg { filter: drop-shadow(0 0 1px #fffdf6) drop-shadow(0 1px 1px #fffdf6); }
 .cc-cursor .cc-cursor-circle { top: -16px; left: -16px; stroke-width: 1; }
-.cc-cursor-outline { fill: #f9f6ec22; stroke: currentColor; }
+.cc-cursor-outline { fill: none; stroke: currentColor; }
 .cc-cursor[data-mode="pointer"] .cc-cursor-circle { opacity: 1; }
-.cc-cursor[data-mode="pointer"][data-interactive="true"] .cc-cursor-circle { transform: scale(1.3); }
-.cc-cursor[data-mode="pointer"][data-pressed="true"] .cc-cursor-circle { transform: scale(.85); transition-duration: 100ms; }
-.cc-cursor-text { top: -12px; left: -9px; }
-.cc-cursor-range { top: -10px; left: -14px; }
-.cc-cursor-grab { top: -12px; left: -12px; }
-.cc-cursor[data-mode="text"] .cc-cursor-text, .cc-cursor[data-mode="range"] .cc-cursor-range, .cc-cursor[data-mode="grab"] .cc-cursor-grab { opacity: 1; }
-.cc-cursor[data-pressed="true"] svg { transform: scale(.9); transition-duration: 100ms; }
+.cc-cursor[data-mode="pointer"][data-interactive="true"] .cc-cursor-circle { transform: scale(1.55); }
+.cc-cursor[data-mode="pointer"][data-pressed="true"] .cc-cursor-circle { transform: scale(.78); transition-duration: 100ms; }
 @media (prefers-reduced-motion: reduce) { .cc-cursor *, .cc-cursor svg { transition: none; } }
 @media (hover: none), (pointer: coarse) { .cc-cursor { display: none; } }
 
 .cc-cursor-follow { position: absolute; top: 0; left: 0; pointer-events: none; }
-.cc-cursor-dot { position: absolute; top: -2.5px; left: -2.5px; width: 5px; height: 5px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 1px #fffdf6; opacity: 0; transition: opacity 100ms ease; }
+.cc-cursor-dot { position: absolute; top: -2.5px; left: -2.5px; width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0; transition: transform 140ms cubic-bezier(.23,1,.32,1), opacity 100ms ease; }
 .cc-cursor[data-mode="pointer"] .cc-cursor-dot { opacity: 1; }
+
+
+.cc-cursor[data-interactive="true"] .cc-cursor-dot { transform: scale(.7); }
+.cc-cursor[data-pressed="true"] .cc-cursor-dot { transform: scale(1.25); }
+.cc-cursor-ripple { position: absolute; top: -16px; left: -16px; width: 32px; height: 32px; border: 1px solid currentColor; border-radius: 50%; opacity: 0; }

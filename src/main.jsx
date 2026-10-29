@@ -6,6 +6,7 @@ import App from "./App";
 import PageContentProvider from "./components/PageContentProvider";
 import "./index.css";
 import "./public-polish.css";
+import "./responsive.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

@@ -271,7 +271,7 @@ const base = process.env.CC_TEST_URL || "http://127.0.0.1:5173";
     assert.equal(await target.locator('html').evaluate(n=>n.classList.contains('cc-cursor-enabled')),true);
     assert.equal(await target.locator('body').evaluate(n=>getComputedStyle(n).cursor),'none');
     assert.equal(await target.locator('.cc-cursor').evaluate(n=>n.matches(':popover-open')),true);
-    const button=target.locator('a[href],button').first();
+    const button=target.locator('.dock-join');
     await button.hover();
     assert.equal(await target.locator('.cc-cursor').getAttribute('data-interactive'),'true');
     await target.mouse.move(165,165);
@@ -284,11 +284,11 @@ const base = process.env.CC_TEST_URL || "http://127.0.0.1:5173";
   }
   await page.getByLabel('GitHub URL (optional)',{exact:true}).hover();
   assert.equal(await page.getByLabel('GitHub URL (optional)',{exact:true}).evaluate(n=>getComputedStyle(n).cursor),'none');
-  assert.equal(await page.locator('.cc-cursor').getAttribute('data-mode'),'text');
+  assert.equal(await page.locator('.cc-cursor').getAttribute('data-mode'),'pointer');
   await page.getByRole('slider').first().hover();
-  assert.equal(await page.locator('.cc-cursor').getAttribute('data-mode'),'range');
+  assert.equal(await page.locator('.cc-cursor').getAttribute('data-mode'),'pointer');
   await page.locator('[title="Drag to reorder"]').first().hover();
-  assert.equal(await page.locator('.cc-cursor').getAttribute('data-mode'),'grab');
+  assert.equal(await page.locator('.cc-cursor').getAttribute('data-mode'),'pointer');
 
   await visitor.evaluate(()=>{const d=document.createElement('dialog');d.innerHTML='<button>Cursor dialog check</button>';document.body.append(d);d.showModal();});
   await visitor.getByRole('button',{name:'Cursor dialog check'}).hover();

@@ -695,7 +695,7 @@ export default function Admin() {
         setDraggedCardIndex(null);
       }}
       onDragEnd={() => setDraggedCardIndex(null)}
-      className="bg-white border-2 border-black/10 rounded-2xl p-6 mb-6 shadow-sm relative group overflow-hidden"
+      className="admin-record-card bg-white border-2 border-black/10 rounded-2xl p-6 mb-6 shadow-sm relative group overflow-hidden"
     >
       <div className="absolute top-0 left-0 w-2 h-full bg-black/10 transition-colors group-hover:bg-black"></div>
 
@@ -1092,7 +1092,7 @@ export default function Admin() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 pb-6 border-b-2 border-black/10"
+          className="admin-topbar flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 pb-6 border-b-2 border-black/10"
         >
           <div>
             <h1 className="text-5xl md:text-6xl font-black font-serif text-black tracking-tighter inline-flex items-center gap-4">
@@ -1124,7 +1124,7 @@ export default function Admin() {
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="w-full lg:w-64 shrink-0 flex flex-col gap-2 lg:sticky lg:top-32 z-20"
+            className="admin-modules w-full lg:w-64 shrink-0 flex flex-col gap-2 lg:sticky lg:top-32 z-20"
           >
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-black/40 mb-2 pl-2">
               {pageSchemas[activePage].label}

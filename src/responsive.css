@@ -1,0 +1,67 @@
+/* Responsive fit corrections only: preserve the existing palette and motion. */
+.site-nav > div:first-child, .site-footer :is(.flex, .grid) > *, .contact-postcard > div { min-width: 0; }
+.site-nav-desktop { flex-shrink: 0; }
+.site-nav-links a, .site-nav-desktop > a { white-space: nowrap; }
+.site-nav-menu { max-height: calc(100dvh - 104px); overflow-y: auto; overscroll-behavior: contain; }
+.site-nav-menu a { min-height: 44px; overflow-wrap: anywhere; }
+.site-footer .footer-brand { overflow-wrap: anywhere; }
+.site-footer .footer-social { display: flex; flex-wrap: wrap; max-width: 100%; }
+.site-footer .footer-social a { flex-shrink: 0; }
+.contact-social { flex-wrap: wrap; }
+.contact-postcard :is(input, textarea) { min-width: 0; max-width: 100%; }
+.club-pillars .pillar-desktop-caption { max-width: 100%; }
+.club-pillars .pillar-desktop-caption p { min-width: 0 !important; }
+.club-pillars .pillar-desktop-caption h3 { white-space: normal; overflow-wrap: anywhere; }
+:is(.event-modal-copy, .gallery-cinema-footer, .album-viewer, .admin-panel) :is(h1, h2, h3, p) { overflow-wrap: anywhere; }
+.gallery-cinema-footer > *, .gallery-cinema-header > *, .album-viewer > div > div { min-width: 0; }
+.gallery-cinema-actions { flex-shrink: 0; }
+.admin-panel .admin-modules button { min-height: 44px; }
+@media (min-width: 768px) and (max-width: 1023px) {
+  .site-nav .site-nav-desktop, .site-nav .site-nav-links { gap: 16px; }
+  .site-nav-desktop > a { margin-left: 0; padding-inline: 12px; }
+  .site-footer .footer-brand { font-size: 32px; line-height: 1.15; }
+  .contact-polish .contact-postcard { padding: 32px; }
+  .contact-form-side { padding-right: 24px; }
+  .contact-address-side { padding-left: 24px; }
+  .contact-polish .contact-email { font-size: 14px; }
+  .home-polish .home-value-paper { padding: 20px; }
+  .club-pillars .pillar-desktop-caption { padding: 24px; }
+  .club-pillars .pillar-desktop-caption h3 { font-size: 28px; line-height: 1.15; }
+}
+@media (max-width: 767px) {
+  .contact-polish :is(input, textarea), .admin-panel :is(input:not([type="checkbox"]):not([type="range"]):not([type="file"]), textarea, select), .gallery-search-bar :is(input, select) { font-size: 16px; }
+  .gallery-cinema-header { flex-wrap: wrap; }
+  .gallery-cinema-actions { flex-wrap: wrap; max-width: 100%; }
+  .album-viewer { max-width: calc(100vw - 24px); }
+}
+@media (max-width: 479px) {
+  .admin-panel { padding-inline: 16px; }
+  .admin-topbar h1 { font-size: 36px; gap: 12px; }
+  .admin-topbar h1 svg { width: 30px; height: 30px; }
+  .admin-topbar > div > p { font-size: 14px; line-height: 1.5; }
+  .admin-panel .admin-record-card, .admin-panel .admin-record-toolbar { padding: 16px; }
+  .admin-panel .cms-page-editor { padding: 16px; }
+  .admin-panel .cms-field-grid, .admin-panel .cms-list-item .cms-field-grid { padding-inline: 10px; }
+  .admin-panel .cms-list { padding: 10px; }
+  .admin-panel .cms-item-toolbar { flex-wrap: wrap; padding-inline: 10px; }
+  .admin-panel .cms-item-toolbar > div { flex-wrap: wrap; }
+  .admin-panel .cms-item-toolbar button { min-width: 40px; min-height: 44px; }
+  .admin-panel .image-controls { padding: 12px; }
+  .home-polish .home-paper-stats > div { gap: 8px; padding-inline: 16px; }
+  .home-polish .home-paper-stats > div > div { padding-inline: 4px; }
+  .home-polish .home-paper-stats [class*='text-4xl'] { font-size: 24px; }
+  .home-polish .home-paper-stats [class*='tracking-[0.2em]'] { overflow-wrap: anywhere; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) { .site-footer .footer-brand { font-size: 40px; } }
+@media (max-width: 767px) { .contact-postcard :is(input, textarea) { min-height: 44px; } }
+
+/* Keep animated domain labels in their own space around the hero copy. */
+.home-domain-rail { display: none; }
+@media (min-width: 1024px) {
+  .home-polish .home-desk-hero { padding-top: 88px; padding-bottom: 64px; gap: 48px; }
+  .home-domain-rail { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 28px 40px; width: min(100%, 1080px); padding-inline: 24px; }
+  .home-domain-rail-bottom { width: min(100%, 940px); }
+  .home-domain-sticker { flex: 0 1 auto; max-width: 100%; min-width: 0; }
+  .home-domain-sticker span { overflow-wrap: anywhere; }
+  .home-domain-rail:empty { display: none; }
+}

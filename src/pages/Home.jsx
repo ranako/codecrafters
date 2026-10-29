@@ -42,6 +42,20 @@ export default function Home() {
   const coreValueHovers = ["group-hover:bg-[#a3b18a]", "group-hover:bg-[#8ea2c4]", "group-hover:bg-[#c29f8a]"];
   const statColors = ["text-[#a3b18a] bg-[#e3ebd5]", "text-[#8ea2c4] bg-[#dce4f0]", "text-[#c29f8a] bg-[#f0e3dc]"];
 
+  const renderDomain = (domain, index) => (
+    <Motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ scale: 1.03, zIndex: 50, rotate: "0deg" }}
+      transition={{ type: "spring", delay: 0.8 + index * 0.1 }}
+      key={`${domain.name}-${index}`}
+      className={`home-domain-sticker relative flex items-center gap-2 px-4 py-3 ${pastelBgs[index % pastelBgs.length]} shadow-[0_5px_15px_-5px_rgba(0,0,0,0.15)] text-black/80 font-bold text-sm tracking-wide ${rotations[index % rotations.length]} cursor-pointer hover:shadow-2xl transition-all duration-300`}
+    >
+      <domain.icon size={16} className="text-black/60 shrink-0" />
+      <span>{domain.name}</span>
+    </Motion.div>
+  );
+
   return (
     <div className="home-polish min-h-screen w-full bg-[#e6e4dc] relative overflow-hidden flex flex-col items-center">
       
@@ -54,6 +68,9 @@ export default function Home() {
       {/* ──── HERO DESK ──── */}
       <section className="home-desk-hero relative w-full flex flex-col items-center justify-center z-10">
         
+        <div className="home-domain-rail home-domain-rail-top" aria-label="Community domains">
+          {domains.slice(0, Math.ceil(domains.length / 2)).map(renderDomain)}
+        </div>
         <div className="home-hero-copy relative max-w-5xl mx-auto px-4 text-center">
            
            {/* Badge */}
@@ -104,29 +121,8 @@ export default function Home() {
            </Motion.div>
         </div>
 
-        {/* Scattered Domain Stickers */}
-        <div className="absolute inset-0 pointer-events-none z-0 hidden lg:block">
-           {domains.map((d, i) => {
-              const isLeft = i % 2 === 0;
-              const topPos = domains.length <= 5 ? 20 + (i * 15) : 16 + Math.floor(i / 2) * (64 / Math.max(1, Math.ceil(domains.length / 2) - 1));
-              const leftPos = domains.length <= 5 ? (isLeft ? 10 + (i * 2) : 80 - (i * 2)) : (isLeft ? 6 : 78);
-              const rotation = rotations[i % rotations.length];
-
-              return (
-                <Motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  whileHover={{ scale: 1.03, zIndex: 50, rotate: "0deg" }}
-                  transition={{ type: "spring", delay: 0.8 + (i * 0.1) }}
-                  key={d.name}
-                  className={`pointer-events-auto absolute flex items-center gap-2 px-4 py-3 ${pastelBgs[i % pastelBgs.length]} shadow-[0_5px_15px_-5px_rgba(0,0,0,0.15)] text-black/80 font-bold text-sm tracking-wide ${rotation} cursor-pointer hover:shadow-2xl transition-all duration-300`}
-                  style={{ top: `${topPos}%`, left: `${leftPos}%` }}
-                >
-                  <d.icon size={16} className="text-black/60" />
-                  {d.name}
-                </Motion.div>
-              );
-           })}
+        <div className="home-domain-rail home-domain-rail-bottom" aria-label="More community domains">
+          {domains.slice(Math.ceil(domains.length / 2)).map((domain, index) => renderDomain(domain, index + Math.ceil(domains.length / 2)))}
         </div>
       </section>
 

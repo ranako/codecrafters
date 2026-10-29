@@ -23,7 +23,7 @@ export default function ClubPillars() {
         description={content.description}
       />
 
-      <div className="flex flex-col md:flex-row gap-4 h-[60vh] min-h-[400px] w-full mt-6">
+      <div className="club-pillars flex flex-col md:flex-row gap-4 h-[60vh] min-h-[400px] w-full mt-6">
         {pillarsData.map((pillar, index) => {
           const isActive = Math.min(active, pillarsData.length - 1) === index;
 
@@ -61,7 +61,7 @@ export default function ClubPillars() {
 
               {/* Active State Content */}
               <div 
-                className={`absolute bottom-0 left-0 p-6 md:p-10 w-[90vw] md:w-[450px] pointer-events-none text-white hidden md:flex flex-col justify-end transition-all duration-500 ease-out ${
+                className={`pillar-desktop-caption absolute bottom-0 left-0 p-6 md:p-10 w-[90vw] md:w-[450px] pointer-events-none text-white hidden md:flex flex-col justify-end transition-all duration-500 ease-out ${
                   isActive ? "opacity-100 translate-y-0 delay-100" : "opacity-0 translate-y-8"
                 }`}
               >

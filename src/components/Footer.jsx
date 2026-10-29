@@ -26,7 +26,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer hidden={!content.enabled} className={`w-full bg-[#f5f3eb] border-t-2 border-dashed border-black ${location.pathname === "/events" ? "mt-8" : "mt-32"} relative overflow-hidden`}>
+    <footer hidden={!content.enabled} className={`site-footer w-full bg-[#f5f3eb] border-t-2 border-dashed border-black ${location.pathname === "/events" ? "mt-8" : "mt-32"} relative overflow-hidden`}>
       
       {/* Tape Decoration */}
       <div className="absolute top-0 right-12 w-24 h-8 bg-[#e6dcf0]/90 border border-black/10 -translate-y-4 rotate-3 pointer-events-none" />
@@ -46,7 +46,7 @@ export default function Footer() {
                 onClick={() => handleSamePageClick("/")}
                 className="inline-block mb-4 group"
               >
-                <span className="text-3xl md:text-5xl font-black text-black font-serif uppercase tracking-tighter transition-colors duration-200">
+                <span className="footer-brand text-3xl md:text-5xl font-black text-black font-serif uppercase tracking-tighter transition-colors duration-200">
                   {content.brand}
                 </span>
               </Link>
@@ -93,7 +93,7 @@ export default function Footer() {
               </h3>
               
               {/* Social Grid */}
-              <div className="grid grid-cols-4 gap-3 mb-8 w-fit">
+              <div className="footer-social grid grid-cols-4 gap-3 mb-8 w-fit">
                 {socialLinks.map((social, index) => (
                   <Motion.a
                     key={social.name}
