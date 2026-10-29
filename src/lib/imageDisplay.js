@@ -1,7 +1,7 @@
 export const imagePlacements = {
   eventCard: { label: "Events card cover", fit: "cover" },
   eventHome: { label: "Home event spotlight", fit: "cover" },
-  eventDetail: { label: "Event details", fit: "cover" },
+  eventDetail: { label: "Event details", fit: "contain" },
   albumHome: {
     label: "Home album cover",
     fit: "cover",

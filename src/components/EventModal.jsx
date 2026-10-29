@@ -40,7 +40,7 @@ export default function EventModal({ event, status, onClose }) {
     onClick={(e) => { if (e.target === e.currentTarget) { const box = e.currentTarget.getBoundingClientRect(); if (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom) onClose(); } }}>
     <button ref={close} type="button" onClick={onClose} className="event-modal-close" aria-label="Close event details">✕</button>
     <div className="event-modal-layout">
-      {event.image && <div className="event-modal-image"><DisplayImage src={event.image} settings={event.image_display} placement="eventDetail" alt={event.title} /></div>}
+      {event.image && <div className="event-modal-image"><DisplayImage src={event.image} placement="eventDetail" alt={event.title} /></div>}
       <div className="event-modal-copy">
         <p className="gallery-eyebrow">{status === 'live' ? 'Live now' : status === 'past' ? 'Past event' : 'Upcoming event'}{event.category ? ` / ${event.category}` : ''}</p>
         <h2 id="event-detail-title">{event.title}</h2>
