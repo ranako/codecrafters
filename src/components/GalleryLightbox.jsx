@@ -1,3 +1,4 @@
+import { albumDescription } from "../lib/adminContentUtils";
 import DisplayImage from "./DisplayImage";
 import { useEffect, useRef, useState } from 'react';
 
@@ -23,7 +24,7 @@ export default function GalleryLightbox({ photos, initialIndex, events, onClose 
     try { await navigator.clipboard.writeText(active.url); setShareState('Image link copied'); }
     catch { setShareState('Could not copy. Use Open original instead.'); }
   };
-  return <dialog ref={dialog} className="gallery-cinema" aria-labelledby="gallery-photo-title"
+  return <dialog data-lenis-prevent ref={dialog} className="gallery-cinema" aria-labelledby="gallery-photo-title"
     onCancel={(e) => { e.preventDefault(); onClose(); }}
     onKeyDown={(e) => { if (e.key === 'ArrowRight') { e.preventDefault(); advance(1); } if (e.key === 'ArrowLeft') { e.preventDefault(); advance(-1); } }}>
     <header className="gallery-cinema-header">
@@ -40,7 +41,7 @@ export default function GalleryLightbox({ photos, initialIndex, events, onClose 
       <button className="gallery-photo-next" onClick={() => advance(1)} disabled={photos.length < 2} aria-label="Next photo">→</button>
     </div>
     <footer className="gallery-cinema-footer">
-      <div><p className="gallery-eyebrow">{event?.category || 'Community archive'}</p><h2 id="gallery-photo-title">{active.caption || active.album.title}</h2><p>{active.caption ? active.album.title : active.album.description}</p><p role="status">{shareState}</p></div>
+      <div><p className="gallery-eyebrow">{event?.category || 'Community archive'}</p><h2 id="gallery-photo-title">{active.caption || active.album.title}</h2><p>{active.caption ? active.album.title : albumDescription(active.album)}</p><p role="status">{shareState}</p></div>
       {event && <details className="gallery-event-context"><summary>Event details</summary><strong>{event.title}</strong><p>{event.date} · {event.time}</p><p>{event.location}</p><p>{event.description}</p></details>}
     </footer>
   </dialog>;

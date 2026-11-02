@@ -1,0 +1,9 @@
+.club-life-grid { display: grid; grid-template-columns: minmax(0,1fr); gap: 24px; width: 100%; }
+.club-life-album { display: flex; flex-direction: column; min-width: 0; }
+.club-life-album > :is(img,.cc-display-image,.cc-image-fallback) { width: 100%; aspect-ratio: 4/3; object-fit: cover; }
+.club-life-caption { display: flex; flex: 1; flex-direction: column; gap: 8px; padding: 20px; }
+.club-life-caption strong { font-size: 18px; font-weight: 750; }
+.club-life-caption > span { font-size: 13px; line-height: 1.65; color: #605e55; }
+.club-life-caption small { display: flex; justify-content: space-between; margin-top: auto; padding-top: 10px; font: 11px ui-monospace,monospace; color: #605e55; }
+@media(min-width:640px) { .club-life-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(min-width:1024px) { .club-life-grid { grid-template-columns: repeat(var(--album-columns,3),minmax(0,1fr)); } }

@@ -256,8 +256,7 @@ policies, authentication, storage permissions or publication settings. It has
 not been applied. Existing text-only edits omit absent link columns until needed.
 
 The custom circular cursor covers public/admin desktop pages, including
-form fields and dialogs, with brief hover and press feedback. Text fields use a
-custom caret, sliders use horizontal arrows, and drag handles use move arrows.
+form fields and dialogs, with brief hover and press feedback. The same round cursor remains available over forms and controls.
 The center dot tracks immediately; the larger ring follows with a short,
 frame-rate-independent delay and stops animating when settled. Reduced motion
 removes the delay. There is no idle animation. Native pointer hiding
@@ -277,3 +276,78 @@ seven routes at 320, 390, 768, 1024 and 1440 pixels) and
 photo/event dialogs and admin collection controls). They do not write live data.
 
 The main navigation is a bottom floating dock with icon links and an active-page pill. On mobile it keeps the logo/Join action and opens the page list above the dock. The cursor remains a round dot and trailing ring over the logo, without a logo-specific hover effect. Other controls gently expand the ring; clicking adds a short ripple. The optional mocked check is tests/browser/navbarDock.e2e.cjs.
+
+
+### Admin workspace, past events and album photos
+
+Page content, events, albums, members, testimonials and appearance retain their
+existing save/reset workflows. Collections now have a searchable record index,
+publication/status filters and an editor for the selected record. The Save changes
+action saves the collection; publication remains controlled by each record's
+Published on website checkbox. New events/albums/testimonials start unpublished.
+Keyboard order buttons and grip dragging remain available.
+
+Create past event starts a private record with manual Past status. Drafts and
+past records can omit schedules; any entered schedule must have valid start/end
+values. Upcoming/live records need a schedule before publishing. The MSU coding
+workshop and ITM mini hackathon have explicit Prepare buttons: these insert local
+unpublished drafts, with the supplied posters, descriptions, locations and schedules (MSU: 30 January 2026; ITM: 28 September 2025, using the owner-confirmed year). Event photo albums remain separate. Fill missing poster details can complete an existing matching draft while preserving nonempty fields and publication flags.
+They do not write live records until Save changes is used.
+
+For a saved event, Add event album opens its existing album or prepares a linked
+private album with the event title/date. Gallery albums offer multi-file picking,
+drag/drop, per-file progress, URL batches, thumbnail selection, captions, cover
+selection, replacement, removal, drag/keyboard ordering and image framing.
+Completed uploads survive a later upload failure; retry only the remaining files.
+Caption/display metadata stays associated with photo URLs when reordered or
+replaced. Uploading locks saving, record switching and section navigation.
+
+Club Life uses a balanced grid (four albums form two full columns). Missing
+published album descriptions get brief title-based fallback copy. Fill missing
+descriptions puts editable suggestions into the album drafts before saving;
+existing descriptions are preserved.
+
+No database schema, authentication, RLS, storage permissions or existing records
+are changed by these frontend updates. Tests use mocked auth/REST/storage only:
+`node --test tests/adminContentUtils.test.js` and the optional
+`tests/browser/adminWorkspace.e2e.cjs`. Live authenticated writes/storage permissions
+still require verification against the actual account; nothing was published or
+seeded into the live database during implementation.
+
+
+### Photo color, reel controls and scrolling
+
+Photos retain their original colors across home albums, event covers, hanging
+albums and team portraits; photographic grayscale/desaturation effects are removed.
+Gallery → Reel settings exposes loop duration (15–120 seconds), speed presets,
+first-row direction, hover pause, album filters, specific photo selection and
+selected-photo ordering. Selection uses stable album-ID/URL keys. An empty manual
+selection is blocked before saving. Settings use the existing presentation table
+and remain private until Save appearance succeeds; failed saves retain the draft.
+
+The gallery tracks use compositor hints and pause offscreen. Cursor movement
+keeps the center dot immediate, limits the trailing ring to 20px, and avoids
+rewriting global classes or unchanged hover attributes on every pointer event.
+The hanging album strip maps to the Lenis-smoothed page position on desktop and uses native smooth
+horizontal scrolling on compact screens. Reduced motion uses a static, manually
+scrollable strip and updates when the system preference changes.
+
+`tests/browser/reelMotionColor.e2e.cjs` checks these behaviors against mocked
+backend requests. It verifies selection/speed persistence, failed saves and private
+drafts, photo filters, cursor updates, offscreen pausing, scrolling and reduced
+motion. It does not establish a device-wide FPS or memory-performance guarantee.
+
+
+### Lenis scrolling on Gallery and Events
+
+A single `LenisScroll` owner runs Lenis on `/gallery` and `/events`. It smooths
+wheel scrolling through Community in Frames and the hanging album section;
+the reel's two independent CSS loops, speed settings and pause controls are unchanged.
+The former album spring is removed to avoid stacking two smoothing engines.
+Other pages and the admin workspace keep native scrolling. Touch input stays
+native (`syncTouch: false`), and reduced motion dynamically destroys the instance.
+
+All photo/event dialogs bypass Lenis. While a dialog locks the body, the page
+engine stops; on close it remeasures the restored document and synchronizes the
+saved scroll position. Route changes and unmounts destroy the engine and observer.
+The optional mocked check is `tests/browser/lenisScroll.e2e.cjs`.

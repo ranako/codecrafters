@@ -1,7 +1,8 @@
+import { useReducedMotionPreference } from "../hooks/useReducedMotionPreference";
 import DisplayImage from "./DisplayImage";
 import { usePageContent } from "../hooks/usePageContent";
 import { useState, useEffect, useRef } from "react";
-import { motion as Motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
+import { motion as Motion, useScroll, useTransform } from "framer-motion";
 import { FaCameraRetro } from "react-icons/fa";
 import AlbumViewer from "./AlbumViewer";
 import { usePublicCollection, usePublicPreview } from "../hooks/usePublicCollection";
@@ -12,7 +13,7 @@ export default function PastEvents() {
   const preview = usePublicPreview();
   const view = preview?.document?.defaultView || window;
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const reducedMotion = useReducedMotion() || Boolean(preview);
+  const reducedMotion = useReducedMotionPreference() || Boolean(preview);
   const [stageHeight, setStageHeight] = useState(680);
   const [compact, setCompact] = useState(view.innerWidth < 768);
   const collection = usePublicCollection('albums', fetchPastEventAlbums);
@@ -29,7 +30,7 @@ export default function PastEvents() {
   useEffect(() => {
     const measure = () => {
       if (contentRef.current) {
-        setScrollRange(Math.max(0, contentRef.current.scrollWidth - view.innerWidth));
+        setScrollRange(Math.max(0, contentRef.current.scrollWidth - (targetRef.current?.clientWidth || view.innerWidth)));
         setStageHeight(Math.ceil(view.innerHeight * 0.24 + contentRef.current.offsetHeight + 48));
         setCompact(view.innerWidth < 768);
       }
@@ -77,7 +78,7 @@ export default function PastEvents() {
         <Motion.div
           ref={contentRef}
           style={{ x: naturalScroll ? 0 : x }}
-          className="flex items-start gap-6 sm:gap-10 md:gap-14 w-max pl-[5vw] sm:pl-[10vw] pr-[5vw] sm:pr-[10vw] mt-[24vh]"
+          className="album-hanging-track flex items-start gap-6 sm:gap-10 md:gap-14 w-max pl-[5vw] sm:pl-[10vw] pr-[5vw] sm:pr-[10vw] mt-[24vh]"
         >
           {pastEvents.map((event, i) => {
             const rotationClass = rotations[i % rotations.length];
@@ -111,7 +112,7 @@ export default function PastEvents() {
                 >
                   {/* DEFAULT CARD COVER */}
                   <div className={`absolute inset-0 p-4 md:p-5 pb-12 flex flex-col transition-opacity duration-300 pointer-events-none opacity-100`}>
-                    <div className="w-full aspect-square bg-[#eaeaea] border-[3px] border-black/10 overflow-hidden filter grayscale contrast-125 saturate-50 group-hover:grayscale-[0.2] transition-all duration-700 relative flex items-center justify-center text-4xl font-bold text-black/10 shadow-[inset_0_0_20px_rgba(0,0,0,0.05)]">
+                    <div className="w-full aspect-square bg-[#eaeaea] border-[3px] border-black/10 overflow-hidden transition-all duration-700 relative flex items-center justify-center text-4xl font-bold text-black/10 shadow-[inset_0_0_20px_rgba(0,0,0,0.05)]">
                       {event.coverImage ? (
                         <DisplayImage
                           src={event.coverImage} settings={event.cover_display} placement="albumHanging"

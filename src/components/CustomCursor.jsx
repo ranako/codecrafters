@@ -10,11 +10,16 @@ export default function CustomCursor() {
     const follower = node.querySelector('.cc-cursor-follow');
     let frame = 0;
     let previousTime = 0;
+    let shown = false;
+    let hovering = false;
+    let followTime = 45;
+    node.dataset.mode = 'pointer';
+    node.dataset.interactive = 'false';
     let x = 0, y = 0, targetX = 0, targetY = 0, pointerX = 0, pointerY = 0;
     const draw = (time) => {
       const elapsed = Math.min(64, previousTime ? time - previousTime : 16);
       previousTime = time;
-      const blend = reduced.matches ? 1 : 1 - Math.exp(-elapsed / 65);
+      const blend = reduced.matches ? 1 : 1 - Math.exp(-elapsed / followTime);
       x += (targetX - x) * blend;
       y += (targetY - y) * blend;
       const settled = Math.abs(targetX - x) + Math.abs(targetY - y) < .1;
@@ -29,7 +34,8 @@ export default function CustomCursor() {
     const hide = () => {
       ripple?.cancel();
       cancelAnimationFrame(frame); frame = 0; previousTime = 0;
-      document.documentElement.classList.remove('cc-cursor-enabled');
+      if (shown) document.documentElement.classList.remove('cc-cursor-enabled');
+      shown = false;
       node.dataset.visible = 'false';
       node.dataset.pressed = 'false';
       if (node.matches(':popover-open')) node.hidePopover();
@@ -45,15 +51,17 @@ export default function CustomCursor() {
       pointerX = event.clientX; pointerY = event.clientY;
       targetX = pointerX;
       targetY = pointerY;
+      followTime = target?.closest('.gallery-reel') ? 24 : 45;
+      const distance = Math.hypot(x - pointerX, y - pointerY);
+      if (distance > 20) { x = pointerX + (x - pointerX) * 20 / distance; y = pointerY + (y - pointerY) * 20 / distance; }
       if (node.dataset.visible !== 'true' || reduced.matches) { x = targetX; y = targetY; }
       follower.style.transform = `translate3d(${x - pointerX}px, ${y - pointerY}px, 0)`;
       if (!frame) frame = requestAnimationFrame(draw);
       node.style.transform = `translate3d(${event.clientX}px, ${event.clientY}px, 0)`;
-      node.dataset.visible = 'true';
+      if (!shown) { node.dataset.visible = 'true'; document.documentElement.classList.add('cc-cursor-enabled'); shown = true; }
       const interactive = target?.closest('a[href], button:not(:disabled), input, textarea, select, summary, [role="button"], [draggable="true"], .image-focal');
-      node.dataset.mode = 'pointer';
-      node.dataset.interactive = String(Boolean(interactive && !interactive.matches(':disabled, [aria-disabled="true"]')));
-      document.documentElement.classList.add('cc-cursor-enabled');
+      const nextHover = Boolean(interactive && !interactive.matches(':disabled, [aria-disabled="true"]'));
+      if (nextHover !== hovering) { hovering = nextHover; node.dataset.interactive = String(hovering); }
     };
     const down = (event) => {
       if (event.button !== 0) return;

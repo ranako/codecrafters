@@ -35,7 +35,7 @@ export default function EventModal({ event, status, onClose }) {
       document.documentElement.style.scrollBehavior = behavior;
     };
   }, []);
-  return createPortal(<dialog ref={dialog} className="event-detail-modal" aria-labelledby="event-detail-title"
+  return createPortal(<dialog data-lenis-prevent ref={dialog} className="event-detail-modal" aria-labelledby="event-detail-title"
     onCancel={(e) => { e.preventDefault(); onClose(); }}
     onClick={(e) => { if (e.target === e.currentTarget) { const box = e.currentTarget.getBoundingClientRect(); if (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom) onClose(); } }}>
     <button ref={close} type="button" onClick={onClose} className="event-modal-close" aria-label="Close event details">✕</button>

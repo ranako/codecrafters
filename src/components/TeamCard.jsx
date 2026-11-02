@@ -1,10 +1,10 @@
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { FaLinkedin } from "react-icons/fa";
 
 export default function TeamCard({ member, index }) {
   // Use a sleek vertical portrait aspect ratio for modern, premium look.
   return (
-    <motion.div
+    <Motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -16,7 +16,7 @@ export default function TeamCard({ member, index }) {
          <img
            src={member.image}
            alt={member.name}
-           className="absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105 grayscale group-hover:grayscale-0"
+           className="absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105  "
          />
       ) : (
          <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-black/5">
@@ -42,7 +42,7 @@ export default function TeamCard({ member, index }) {
         {/* LinkedIn Button - Slides in on hover entirely (pointer-events-auto overriding the parent lock) */}
         {member.linkedin && (
           <div className="overflow-hidden h-0 group-hover:h-12 transition-all duration-300 mt-0 group-hover:mt-4 pointer-events-auto border-t-2 border-dashed border-black/20 pt-3 group-hover:pt-4">
-            <motion.a
+            <Motion.a
               href={member.linkedin}
               target="_blank"
               rel="noopener noreferrer"
@@ -51,10 +51,10 @@ export default function TeamCard({ member, index }) {
               className="inline-flex flex-1 w-full items-center justify-center gap-2 px-5 py-2 bg-black text-white text-xs tracking-widest uppercase font-black transition-colors shadow-[2px_2px_0px_rgba(0,0,0,0.5)]"
             >
               <FaLinkedin size={16} /> Connect
-            </motion.a>
+            </Motion.a>
           </div>
         )}
       </div>
-    </motion.div>
+    </Motion.div>
   );
 }

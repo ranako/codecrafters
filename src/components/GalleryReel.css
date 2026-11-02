@@ -50,3 +50,5 @@
 @keyframes gallery-reel-travel { to { transform: translateX(-50%); } }
 
 .gallery-reel-window + .gallery-reel-window { margin-top: 10px; }
+.gallery-reel-moving .gallery-reel-track { will-change: transform; backface-visibility: hidden; }
+.gallery-reel-moving .gallery-reel-window { contain: paint; }

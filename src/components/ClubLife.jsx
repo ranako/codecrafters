@@ -1,3 +1,5 @@
+import { albumDescription } from "../lib/adminContentUtils";
+import "./ClubLife.css";
 import DisplayImage from "./DisplayImage";
 import { usePageContent } from "../hooks/usePageContent";
 import { Link } from "react-router-dom";
@@ -25,7 +27,7 @@ export default function ClubLife() {
       <div className="text-center mb-8"><Link to={content.buttonLink} className="inline-block border-2 border-black bg-white px-5 py-3 font-bold">{content.buttonLabel}</Link></div>
       {status && <p role="status" className="text-center text-sm font-semibold py-8">{status}</p>}
       {selected && <AlbumViewer album={selected} onClose={() => setSelected(null)} />}
-      <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
+      <div className="club-life-grid" style={{ "--album-columns": Math.max(1, albums.length === 4 ? 2 : Math.min(3, albums.length)) }}>
         {albums.slice(0, 6).map((album, i) => (
           <Motion.button
             type="button" onClick={() => setSelected(album)} aria-label={`View ${album.title} photo album`}
@@ -35,15 +37,15 @@ export default function ClubLife() {
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6, delay: i * 0.1, ease: "easeOut" }}
             whileHover={{ scale: 1.03 }}
-            className="w-full text-left mb-4 break-inside-avoid overflow-hidden border-2 border-black bg-white shadow-[4px_4px_0px_#2b2a27] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[0px_0px_0px_#2b2a27] transition-all duration-300"
+            className="club-life-album w-full text-left overflow-hidden border-2 border-black bg-white shadow-[4px_4px_0px_#2b2a27] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[0px_0px_0px_#2b2a27] transition-all duration-300"
           >
             {(album.coverImage || album.photos[0]) && <DisplayImage
               src={album.coverImage || album.photos[0]} settings={album.cover_display} placement="albumHome"
               loading="lazy"
               alt={album.title}
-              className="w-full h-auto object-cover grayscale opacity-90 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
+              className="w-full h-auto object-cover  opacity-90  hover:opacity-100 transition-all duration-500"
             />}
-            <span className="block p-4 font-bold">{album.title}</span>
+            <span className="club-life-caption"><strong>{album.title}</strong><span>{albumDescription(album)}</span><small>{album.photos?.length || 0} photos <span aria-hidden="true">↗</span></small></span>
           </Motion.button>
         ))}
       </div>

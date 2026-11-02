@@ -19,3 +19,4 @@ html.cc-cursor-enabled, html.cc-cursor-enabled *, html.cc-cursor-enabled *::befo
 .cc-cursor[data-interactive="true"] .cc-cursor-dot { transform: scale(.7); }
 .cc-cursor[data-pressed="true"] .cc-cursor-dot { transform: scale(1.25); }
 .cc-cursor-ripple { position: absolute; top: -16px; left: -16px; width: 32px; height: 32px; border: 1px solid currentColor; border-radius: 50%; opacity: 0; }
+.cc-cursor[data-visible="true"] { will-change: transform; }

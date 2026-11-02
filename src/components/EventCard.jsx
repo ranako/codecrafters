@@ -33,11 +33,11 @@ export default function EventCard({ event, index, isOpen, onToggle, status = eve
         
         {/* Top Section - Image */}
         {event.image && (
-          <div className="event-card-image relative h-48 w-full overflow-hidden bg-[#e0e0e0] filter grayscale contrast-125 saturate-50 group-hover:grayscale-0 group-hover:saturate-100 transition-all duration-700 border-b-2 border-black/10">
+          <div className="event-card-image relative h-48 w-full overflow-hidden bg-[#e0e0e0]  transition-all duration-700 border-b-2 border-black/10">
             <DisplayImage
               src={event.image} settings={event.image_display} placement="eventCard"
               alt={event.title} 
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
             {/* Stamp Overlay */}
             <div className="event-ticket-stamp absolute -bottom-4 -right-4 w-24 h-24 border-4 border-black/30 text-black/30 rounded-full flex items-center justify-center -rotate-12 font-black text-2xl tracking-widest uppercase pointer-events-none">

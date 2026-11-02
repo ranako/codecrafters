@@ -1,10 +1,11 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion as Motion } from "framer-motion";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import LoadingScreen from "./components/LoadingScreen";
 import CustomCursor from "./components/CustomCursor";
+import LenisScroll from "./components/LenisScroll";
 import ParticleBackground from "./components/ParticleBackground";
 
 const Home = lazy(() => import("./pages/Home"));
@@ -20,7 +21,7 @@ const Admin = lazy(() => import("./pages/Admin"));
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [pathname]);
   return null;
 }
@@ -33,7 +34,7 @@ const pageTransition = {
 };
 
 function AnimatedPage({ children }) {
-  return <motion.div {...pageTransition}>{children}</motion.div>;
+  return <Motion.div {...pageTransition}>{children}</Motion.div>;
 }
 
 export default function App() {
@@ -45,6 +46,7 @@ export default function App() {
       <CustomCursor />
       <Navbar />
       <ScrollToTop />
+      <LenisScroll />
 
       <main className="relative z-10">
         <Suspense fallback={<LoadingScreen />}>

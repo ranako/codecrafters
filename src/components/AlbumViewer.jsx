@@ -1,3 +1,4 @@
+import { albumDescription } from "../lib/adminContentUtils";
 import DisplayImage from "./DisplayImage";
 import { useEffect, useRef, useState } from 'react';
 
@@ -16,7 +17,7 @@ export default function AlbumViewer({ album, onClose, initialIndex = 0 }) {
   }, []);
   const advance = (amount) => setIndex((current) => (current + amount + photos.length) % photos.length);
   return (
-    <dialog ref={dialog} onCancel={(e) => { e.preventDefault(); onClose(); }}
+    <dialog data-lenis-prevent ref={dialog} onCancel={(e) => { e.preventDefault(); onClose(); }}
       onClick={(e) => { if (e.target === e.currentTarget) { const box = e.currentTarget.getBoundingClientRect(); if (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom) onClose(); } }}
       onKeyDown={(e) => { if (photos.length > 1 && e.key === 'ArrowRight') advance(1); if (photos.length > 1 && e.key === 'ArrowLeft') advance(-1); }}
       aria-labelledby="album-viewer-title" className="album-viewer bg-[#f5f3eb] text-black border-2 border-black p-5 md:p-8 shadow-xl">
@@ -24,7 +25,7 @@ export default function AlbumViewer({ album, onClose, initialIndex = 0 }) {
         <div><p className="text-xs font-bold mb-2">{album.date}</p><h2 id="album-viewer-title" className="text-2xl font-black font-serif">{album.title}</h2></div>
         <button autoFocus onClick={onClose} aria-label="Close photo album" className="border-2 border-black px-3 py-2 font-bold hover:bg-black hover:text-white">✕</button>
       </div>
-      <p className="text-sm mb-4">{album.description}</p>
+      <p className="text-sm mb-4">{albumDescription(album)}</p>
       {photos.length ? <DisplayImage src={photos[index]} settings={album.photo_display?.[photos[index]] || album.cover_display} placement="photoViewer" alt={album.photo_captions?.[photos[index]] || `${album.title}, photo ${index + 1}`} className="w-full max-h-[60vh] object-contain bg-black/5" /> : <p>No photos have been added to this album.</p>}
       {album.photo_captions?.[photos[index]] && <p className="text-sm mt-3">{album.photo_captions[photos[index]]}</p>}
       {photos.length > 0 && <div className="flex items-center justify-between gap-4 mt-5">

@@ -1,8 +1,9 @@
 import "../components/AdminControls.css";
 import ImageControls from "../components/ImageControls";
-import { replaceAlbumPhoto, removeAlbumPhoto } from "../lib/imageDisplay";
+import AlbumPhotoManager from "../components/AlbumPhotoManager";
+import { albumDescription, pastEventDrafts, validateEventSchedule, fillEventPosterDetails } from "../lib/adminContentUtils";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { motion as Motion, AnimatePresence } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import {
   FaCalendarAlt,
   FaUsers,
@@ -42,7 +43,6 @@ import {
   getStorageBucketName,
   getStoragePathFromUrl,
   uploadImageFile,
-  uploadImageFiles,
 } from "../lib/storageApi";
 import {
   isSupabaseConfigured,
@@ -77,7 +77,7 @@ const EMPTY_ITEMS = {
     time: "",
     speakers: [],
     gradient: "from-gray-500 to-gray-700",
-    is_published: true,
+    is_published: false,
   },
   team: {
     name: "New Member",
@@ -96,14 +96,14 @@ const EMPTY_ITEMS = {
     event_id: "",
     photo_captions: {},
     photos: [],
-    is_published: true,
+    is_published: false,
   },
   testimonials: {
     name: "New Person",
     role: "",
     text: "",
     avatar: "",
-    is_published: true,
+    is_published: false,
   },
 };
 
@@ -219,7 +219,7 @@ export default function Admin() {
   const [loginError, setLoginError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const pendingAlbumEvent = useRef("");
+  const pendingAlbumEvent = useRef(null);
   const [clock, setClock] = useState(Date.now);
   const [eventOptions, setEventOptions] = useState([]);
   const [activePage, setActivePage] = useState("home");
@@ -237,7 +237,9 @@ export default function Admin() {
   const [success, setSuccess] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [draggedCardIndex, setDraggedCardIndex] = useState(null);
-  const [draggedPhoto, setDraggedPhoto] = useState(null);
+  const [selectedRecordId, setSelectedRecordId] = useState('');
+  const [recordSearch, setRecordSearch] = useState('');
+  const [recordFilter, setRecordFilter] = useState('all');
   const [uploadingTarget, setUploadingTarget] = useState("");
 
   const recordDirty = TABS.some(tab=>tab.id===activeTab.id) && JSON.stringify(formData)!==JSON.stringify(initialSnapshot);
@@ -255,8 +257,10 @@ export default function Admin() {
     if (dirty && !window.confirm("You have unsaved changes. Discard them and switch sections?")) return;
     pageDirty.current = false;
     setHasLoadedTab(false);setIsLoadingTab(TABS.some(item=>item.id===tab.id));setFormData([]);setInitialSnapshot([]);setInitialIds([]);setSuccess("");setTabError("");
+    setSelectedRecordId(''); setRecordSearch(''); setRecordFilter('all');
     setActivePage(page);
     setActiveTab(tab);
+    return true;
   };
 
   useEffect(() => {
@@ -334,18 +338,18 @@ export default function Admin() {
       try {
         const data = await fetchByTab(activeTab.id);
         if (!isMounted) return;
-        const pendingEventId = activeTab.id === "album" ? pendingAlbumEvent.current : "";
-        if (pendingEventId) {
-          setFormData([...cloneData(data), { ...EMPTY_ITEMS.album, id: createTempId(), event_id: pendingEventId }]);
-          pendingAlbumEvent.current = "";
-        } else {
-          setFormData(cloneData(data));
-        }
+        const pendingEvent = activeTab.id === "album" ? pendingAlbumEvent.current : null;
+        if (pendingEvent) {
+          const existing = data.find(album => album.event_id === pendingEvent.id);
+          const album = existing || { ...EMPTY_ITEMS.album, id: createTempId(), title: pendingEvent.title, date: pendingEvent.date || '', description: pendingEvent.description || '', event_id: pendingEvent.id, is_published: false };
+          setFormData(existing ? cloneData(data) : [...cloneData(data), album]);
+          setSelectedRecordId(album.id);
+          pendingAlbumEvent.current = null;
+        } else setFormData(cloneData(data));
         setInitialSnapshot(cloneData(data));
         setInitialIds(getPersistedIds(data));
         setHasLoadedTab(true);
         setDraggedCardIndex(null);
-        setDraggedPhoto(null);
       } catch (error) {
         if (!isMounted) return;
         setFormData([]);
@@ -412,11 +416,7 @@ export default function Admin() {
           throw new Error("Each item needs a name or title before saving.");
         }
         if (activeTab.id === "upcoming") {
-          const start = Date.parse(item.starts_at || "");
-          const end = Date.parse(item.ends_at || "");
-          if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
-            throw new Error(`Set a start and end date/time for "${item.title}". The end must be after the start.`);
-          }
+          validateEventSchedule(item, initialSnapshot.find(previous => previous.id === item.id));
         }
         if (activeTab.id === "upcoming" && item.registration_url?.trim() && !registrationUrl(item.registration_url.trim())) {
           throw new Error("Registration URL must be a complete http:// or https:// link.");
@@ -443,6 +443,8 @@ export default function Admin() {
       await deleteByTab(activeTab.id, deletedIds);
 
       const refreshed = await fetchByTab(activeTab.id);
+      const selectedIndex = formData.findIndex(item => item.id === currentRecordId);
+      setSelectedRecordId(refreshed[Math.max(0, selectedIndex)]?.id || '');
       setFormData(cloneData(refreshed));
       setInitialSnapshot(cloneData(refreshed));
       setInitialIds(getPersistedIds(refreshed));
@@ -500,51 +502,23 @@ export default function Admin() {
     setFormData((current) => current.filter((_, itemIndex) => itemIndex !== index));
   };
 
-  const addItem = (tabId) => {
+  const addItem = (tabId, overrides = {}) => {
+    if (isSaving || uploadingTarget || !hasLoadedTab) return;
+    const item = { ...EMPTY_ITEMS[tabId], ...overrides, id: createTempId() };
+    setFormData(current => [...current, item]);
+    setSelectedRecordId(item.id); setRecordSearch(''); setRecordFilter('all'); setSuccess('');
+  };
+  const openEventAlbum = item => {
     if (isSaving || uploadingTarget) return;
-    setFormData((current) => [
-      ...current,
-      { ...EMPTY_ITEMS[tabId], id: createTempId() },
-    ]);
+    if (recordDirty) { setTabError('Save your event changes before opening its photo album.'); return; }
+    pendingAlbumEvent.current = item;
+    selectEditor(TABS.find(tab => tab.id === 'album'), 'gallery');
   };
 
   const moveCard = (fromIndex, toIndex) => {
     if (isSaving || uploadingTarget) return;
     if (fromIndex === toIndex || fromIndex == null || toIndex == null) return;
     setFormData((current) => moveArrayItem(current, fromIndex, toIndex));
-  };
-
-  const updatePhoto = (itemIndex, photoIndex, value) => {
-    const item = formData[itemIndex];
-    try {
-      const next = replaceAlbumPhoto(item,photoIndex,value);
-      setFormData(current=>current.map((entry,index)=>index===itemIndex?next:entry));
-    } catch(error) { setTabError(error.message); }
-  };
-
-  const addPhoto = (itemIndex) => {
-    if (isSaving || uploadingTarget) return;
-    setFormData((current) =>
-      current.map((item, index) =>
-        index === itemIndex
-          ? { ...item, photos: [...(item.photos || []), ""] }
-          : item,
-      ),
-    );
-  };
-
-  const removePhoto = (itemIndex, photoIndex) => setFormData(current=>current.map((item,index)=>index===itemIndex?removeAlbumPhoto(item,photoIndex):item));
-
-  const movePhoto = (itemIndex, fromIndex, toIndex) => {
-    if (isSaving || uploadingTarget) return;
-    if (fromIndex === toIndex || fromIndex == null || toIndex == null) return;
-
-    setFormData((current) =>
-      current.map((item, index) => {
-        if (index !== itemIndex) return item;
-        return { ...item, photos: moveArrayItem(item.photos || [], fromIndex, toIndex), ...(item._photoDrafts ? {_photoDrafts: moveArrayItem((item.photos || []).map((_,position)=>item._photoDrafts[position]),fromIndex,toIndex)} : {}) };
-      }),
-    );
   };
 
   const handleImageUpload = async (file, targetKey, onComplete) => {
@@ -557,29 +531,6 @@ export default function Admin() {
     try {
       const publicUrl = await uploadImageFile(file, { folder: activeTab.id });
       onComplete(publicUrl);
-    } catch (error) {
-      setTabError(
-        error.message ||
-          `Image upload failed. Check the "${getStorageBucketName()}" Supabase storage bucket.`,
-      );
-    } finally {
-      setUploadingTarget("");
-    }
-  };
-
-  const handleImageUploads = async (files, targetKey, onComplete) => {
-    const validFiles = Array.from(files || []).filter(Boolean);
-    if (!validFiles.length) return;
-
-    setUploadingTarget(targetKey);
-    setTabError("");
-    setSuccess("");
-
-    try {
-      const publicUrls = await uploadImageFiles(validFiles, {
-        folder: activeTab.id,
-      });
-      onComplete(publicUrls);
     } catch (error) {
       setTabError(
         error.message ||
@@ -683,7 +634,13 @@ export default function Admin() {
     </div>
   );
 
-  const renderCard = (item, index, titleField, fields) => (
+  const currentRecordId = formData.some(item => item.id === selectedRecordId) ? selectedRecordId : formData[0]?.id;
+  const visibleRecords = formData.map((item, index) => ({ item, index })).filter(({ item }) => {
+    const matches = `${item.title || item.name || ''} ${item.description || ''} ${item.role || ''}`.toLowerCase().includes(recordSearch.toLowerCase());
+    const published = activeTab.id === 'team' ? item.is_active !== false : item.is_published !== false;
+    return matches && (recordFilter === 'all' || (recordFilter === 'draft' ? !published : recordFilter === 'published' ? published : eventStatus(item, clock) === recordFilter));
+  });
+  const renderCard = (item, index, titleField, fields) => item.id !== currentRecordId ? null : (
     <Motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -729,8 +686,9 @@ export default function Admin() {
 
       {activeTab.id === "upcoming" && <div className="flex flex-wrap items-center gap-4 mb-4 pl-2">
         <span className="text-xs font-bold uppercase">{eventStatus(item, clock)}{item.status_override ? " (manual)" : " (automatic)"}</span>
+        {pastEventDrafts.some(preset => preset.title.toLowerCase() === item.title?.trim().toLowerCase()) && <button type="button" disabled={isSaving || Boolean(uploadingTarget)} className="border-2 border-black px-3 py-2 text-sm font-bold" onClick={() => setFormData(current => current.map((entry, position) => position === index ? fillEventPosterDetails(entry) : entry))}>Fill missing poster details</button>}
         <button type="button" disabled={!item.id || item.id.startsWith("temp-")} title={item.id?.startsWith("temp-") ? "Save the event before linking an album" : "Create an album for this event"}
-          onClick={() => { if (JSON.stringify(formData) !== JSON.stringify(initialSnapshot)) { setTabError("Save your event changes before creating an album."); return; } pendingAlbumEvent.current = item.id; selectEditor(TABS.find((tab) => tab.id === "album")); }}
+          onClick={() => { if (JSON.stringify(formData) !== JSON.stringify(initialSnapshot)) { setTabError("Save your event changes before creating an album."); return; } openEventAlbum(item); }}
           className="border-2 border-black px-3 py-2 text-sm font-bold disabled:opacity-40">Add event album</button>
       </div>}
       <label className="flex items-center gap-3 mb-6 pl-2 font-bold text-sm">
@@ -742,7 +700,7 @@ export default function Admin() {
         {fields.map((field) => {
           if (field.type === "schedule") {
             return <label key={field.key} className="text-sm font-bold">{field.label}
-              <input type="datetime-local" required value={indiaDateTime(item[field.key])}
+              <input type="datetime-local" required={Boolean(item.is_published && item.status_override !== "past")} value={indiaDateTime(item[field.key])}
                 onChange={(event) => {
                   const value = fromIndiaDateTime(event.target.value);
                   setFormData((current) => current.map((entry, position) => position !== index ? entry : {
@@ -786,6 +744,7 @@ export default function Admin() {
           }
 
           if (field.type === "image") {
+            const controls = <ImageControls src={item[field.key]} value={item[field.key==='coverImage'?'cover_display':'image_display']} onChange={value=>updateItem(index,field.key==='coverImage'?'cover_display':'image_display',value)} placements={activeTab.id==='upcoming'?['eventCard','eventHome','eventDetail']:activeTab.id==='team'?['member']:activeTab.id==='testimonials'?['avatar']:['albumHome','albumHanging']} disabled={isSaving || Boolean(uploadingTarget)} />;
             return (
               <div key={field.key} className="md:col-span-2">
                 {renderImageField(
@@ -794,182 +753,13 @@ export default function Admin() {
                   (nextValue) => updateItem(index, field.key, nextValue),
                   `${activeTab.id}-${index}-${field.key}`,
                 )}
-                <ImageControls src={item[field.key]} value={item[field.key==='coverImage'?'cover_display':'image_display']} onChange={value=>updateItem(index,field.key==='coverImage'?'cover_display':'image_display',value)} placements={activeTab.id==='upcoming'?['eventCard','eventHome','eventDetail']:activeTab.id==='team'?['member']:activeTab.id==='testimonials'?['avatar']:['albumHome','albumHanging']} disabled={isSaving || Boolean(uploadingTarget)} />
+                {activeTab.id === 'album' ? <details className="admin-image-framing"><summary>Adjust album cover framing</summary>{controls}</details> : controls}
               </div>
             );
           }
 
           if (field.type === "photoList") {
-            const photos = Array.isArray(item[field.key]) ? item[field.key] : [];
-
-            return (
-              <div key={field.key} className="md:col-span-2">
-                <div className="flex flex-col gap-3">
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-black/50">
-                    {field.label}
-                  </label>
-                  <div
-                    onDragOver={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                    }}
-                    onDrop={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      handleImageUploads(
-                        event.dataTransfer?.files,
-                        `${activeTab.id}-${index}-${field.key}-batch`,
-                        (publicUrls) =>
-                          updateItem(index, field.key, [...photos, ...publicUrls]),
-                      );
-                    }}
-                    className="rounded-xl border-2 border-dashed border-black/15 bg-black/[0.03] p-4"
-                  >
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/40">
-                          Drop multiple gallery images here
-                        </p>
-                        <p className="text-xs font-bold text-black/40 mt-2">
-                          Uploaded images are appended to this album and can be reordered below.
-                        </p>
-                      </div>
-                      <label className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-black text-white rounded-xl font-bold text-xs tracking-[0.2em] uppercase cursor-pointer">
-                        <FaUpload size={12} />
-                        {uploadingTarget === `${activeTab.id}-${index}-${field.key}-batch`
-                          ? "Uploading..."
-                          : "Upload Many"}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          className="hidden"
-                          onChange={(event) => {
-                            handleImageUploads(
-                              event.target.files,
-                              `${activeTab.id}-${index}-${field.key}-batch`,
-                              (publicUrls) =>
-                                updateItem(index, field.key, [...photos, ...publicUrls]),
-                            );
-                            event.target.value = "";
-                          }}
-                        />
-                      </label>
-                    </div>
-                  </div>
-                  {photos.map((photo, photoIndex) => (
-                    <div
-                      key={`${item.id || index}-photo-${photoIndex}`}
-                      onDragOver={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                      }}
-                      onDrop={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-
-                        const file = event.dataTransfer?.files?.[0];
-                        if (file) {
-                          handleImageUpload(
-                            file,
-                            `${activeTab.id}-${index}-photo-${photoIndex}`,
-                            (publicUrl) => updatePhoto(index, photoIndex, publicUrl),
-                          );
-                          setDraggedPhoto(null);
-                          return;
-                        }
-
-                        if (!draggedPhoto || draggedPhoto.itemIndex !== index) return;
-                        movePhoto(index, draggedPhoto.photoIndex, photoIndex);
-                        setDraggedPhoto(null);
-                      }}
-                      onDragEnd={() => setDraggedPhoto(null)}
-                      className="grid grid-cols-1 md:grid-cols-[72px_1fr_auto] gap-3 items-center rounded-xl border-2 border-black/10 bg-black/[0.03] p-3"
-                    >
-                      <div className="aspect-square overflow-hidden rounded-lg bg-black/5 border border-black/10 flex items-center justify-center">
-                        {photo ? (
-                          <img
-                            src={photo}
-                            alt={`Photo ${photoIndex + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black/30">
-                            Empty
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="cursor-grab text-black/30 group-hover:text-black/60 transition-colors"
-                          title="Drag to reorder photo"
-                          draggable={!isSaving && !uploadingTarget}
-                          onDragStart={(event) => {
-                            event.stopPropagation();
-                            event.dataTransfer.effectAllowed = "move";
-                            event.dataTransfer.setData("text/plain", String(photoIndex));
-                            setDraggedPhoto({ itemIndex: index, photoIndex });
-                          }}
-                        >
-                          <FaGripVertical size={16} />
-                        </span>
-                        <input
-                          type="text"
-                          value={photo || ""}
-                          onChange={(event) =>
-                            updatePhoto(index, photoIndex, event.target.value)
-                          }
-                          className="w-full bg-white border-2 border-transparent focus:border-black rounded-lg px-4 py-2 text-sm text-black transition-colors outline-none"
-                          placeholder="Paste photo URL"
-                        />
-                        <label className="inline-flex items-center justify-center gap-2 px-3 py-2 bg-black text-white rounded-lg font-bold text-[10px] tracking-[0.2em] uppercase cursor-pointer">
-                          <FaUpload size={10} />
-                          {uploadingTarget === `${activeTab.id}-${index}-photo-${photoIndex}`
-                            ? "Uploading..."
-                            : "Upload"}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(event) => {
-                              const file = event.target.files?.[0];
-                              handleImageUpload(
-                                file,
-                                `${activeTab.id}-${index}-photo-${photoIndex}`,
-                                (publicUrl) =>
-                                  updatePhoto(index, photoIndex, publicUrl),
-                              );
-                              event.target.value = "";
-                            }}
-                          />
-                        </label>
-                      </div>
-                      <label className="md:col-span-3 text-xs font-bold">Photo caption (searchable)
-                        <input type="text" value={item.photo_captions?.[photo] || ""}
-                          onChange={(event) => updateItem(index, "photo_captions", { ...item.photo_captions, [photo]: event.target.value })}
-                          className="block w-full mt-2 bg-white border-2 border-black/20 rounded-lg px-4 py-2" />
-                      </label>
-                      <div className="md:col-span-3"><ImageControls src={photo} value={item.photo_display?.[photo]} onChange={value=>updateItem(index,'photo_display',{...item.photo_display,[photo]:value})} placements={['photoGrid','photoReel','photoViewer']} disabled={isSaving || Boolean(uploadingTarget)} /></div>
-                      <button
-                        type="button"
-                        onClick={() => removePhoto(index, photoIndex)}
-                        className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
-                        title="Delete photo"
-                      >
-                        <FaTrash size={12} />
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addPhoto(index)}
-                    className="self-start px-4 py-2 bg-black/5 hover:bg-black/10 text-black rounded-xl font-bold text-xs tracking-[0.2em] uppercase transition-colors"
-                  >
-                    Add Photo
-                  </button>
-                </div>
-              </div>
-            );
+            return <div key={field.key} className="md:col-span-2"><AlbumPhotoManager key={item.id} album={item} onChange={next => setFormData(current => current.map((entry, position) => position === index ? next : entry))} disabled={isSaving || Boolean(uploadingTarget)} onBusyChange={busy => setUploadingTarget(busy ? `album-${item.id}-photos` : '')} onError={setTabError} /></div>;
           }
 
           if (field.type === "textarea") {
@@ -1086,7 +876,7 @@ export default function Admin() {
   }
 
   return (
-    <div className="admin-panel min-h-[80vh] bg-[#e6e4dc] pt-24 pb-16 px-6 md:px-12 lg:px-20 font-sans overflow-x-clip">
+    <div className="admin-panel admin-workspace min-h-[80vh] bg-[#e6e4dc] pt-24 pb-16 px-6 md:px-12 lg:px-20 font-sans overflow-x-clip">
       <div className="max-w-[1680px] mx-auto">
         <Motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -1105,7 +895,7 @@ export default function Admin() {
               Page manager
             </h1>
             <p className="text-black/50 text-xl font-bold font-mono tracking-widest uppercase mt-4">
-              Choose a page, then edit its content
+              Your website, in one workspace
             </p>
           </div>
           <Motion.button
@@ -1119,7 +909,7 @@ export default function Admin() {
         </Motion.div>
 
         <nav className="admin-page-nav" aria-label="Website pages">{Object.entries(pageSchemas).map(([page,schema]) => <button key={page} type="button" aria-current={activePage === page ? "page" : undefined} onClick={() => selectEditor({ id: "page", label: "Page content" }, page)}>{schema.label}</button>)}</nav>
-        <div className="flex flex-col lg:flex-row gap-8 relative items-start">
+        <div className="admin-workspace-body flex flex-col lg:flex-row gap-8 relative items-start">
           <Motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -1158,7 +948,7 @@ export default function Admin() {
                 </Motion.button>
               );
             })}
-            {["home", "events", "gallery"].includes(activePage) && <button type="button" onClick={() => selectEditor({ id: "presentation", label: "Appearance" })} className={`px-5 py-4 rounded-xl font-bold text-left ${activeTab.id === "presentation" ? "bg-black text-white" : "bg-white text-black/60"}`}>Appearance</button>}
+            {["home", "events", "gallery"].includes(activePage) && <button type="button" onClick={() => selectEditor({ id: "presentation", label: activePage === "gallery" ? "Reel settings" : "Appearance" })} className={`px-5 py-4 rounded-xl font-bold text-left ${activeTab.id === "presentation" ? "bg-black text-white" : "bg-white text-black/60"}`}>{activePage === "gallery" ? "Reel settings" : "Appearance"}</button>}
           </Motion.div>
 
           {activeTab.id === "page" ? <div className="flex-1 min-w-0 w-full"><PageContentEditor key={activePage} page={activePage} onDirtyChange={onPageDirtyChange} onBusyChange={onPageBusyChange} /></div> : activeTab.id === "presentation" ? <div className="flex-1 min-w-0 w-full"><PresentationManager onDirtyChange={onPageDirtyChange} onBusyChange={onPageBusyChange} /></div> : <div className="flex-1 min-w-0 w-full admin-editor-single"><div className="min-w-0 w-full">
@@ -1167,7 +957,7 @@ export default function Admin() {
               <div>
                 <h2 className="text-2xl font-black text-black">{activeTab.label}</h2>
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-black/40 mt-2">
-                  Shared content: changes also appear wherever this collection is used.
+                  Saved changes appear everywhere this collection is used. Unpublished items stay private.
                 </p>
               </div>
 
@@ -1191,7 +981,7 @@ export default function Admin() {
                   ) : (
                     <FaSave size={14} />
                   )}{" "}
-                  {isSaving ? "Saving..." : success && !recordDirty ? "Saved!" : "Publish Changes"}
+                  {isSaving ? "Saving..." : success && !recordDirty ? "Saved!" : "Save changes"}
                 </button>
               </div>
             </div>
@@ -1210,11 +1000,20 @@ export default function Admin() {
               </div>
             ) : (
               <div className="space-y-6">
+                <section className="admin-collection-browser" aria-label={`${activeTab.label} records`}>
+                  <div className="admin-collection-heading"><div><span className="admin-eyebrow">CONTENT LIBRARY</span><h2>{formData.length} {activeTab.id === 'upcoming' ? 'events' : activeTab.id === 'album' ? 'albums' : activeTab.id === 'team' ? 'members' : 'testimonials'}</h2></div><p>Select a record to edit. Save the collection when you are ready.</p></div>
+                  <div className="admin-collection-tools"><label>Search records<input type="search" value={recordSearch} onChange={e=>setRecordSearch(e.target.value)} placeholder="Find a name, title or description" /></label><label>Show<select value={recordFilter} onChange={e=>setRecordFilter(e.target.value)}><option value="all">All records</option><option value="published">Published / active</option><option value="draft">Drafts / inactive</option>{activeTab.id==='upcoming' && <><option value="upcoming">Upcoming events</option><option value="live">Live events</option><option value="past">Past events</option></>}</select></label></div>
+                  <div className="admin-record-index">{visibleRecords.map(({item,index})=><div className="admin-record-index-row" key={item.id} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();moveCard(draggedCardIndex,index);setDraggedCardIndex(null);}}><button type="button" disabled={isSaving||Boolean(uploadingTarget)} aria-pressed={currentRecordId===item.id} onClick={()=>setSelectedRecordId(item.id)}><span className="admin-record-index-number">{String(index+1).padStart(2,'0')}</span><span><strong>{item.title || item.name}</strong><small>{(activeTab.id==='team'?item.is_active:item.is_published)!==false?'Published / active':'Draft / inactive'}{activeTab.id==='upcoming'?` · ${eventStatus(item,clock)}`:activeTab.id==='album'?` · ${item.photos?.length || 0} photos`:''}</small></span></button><div className="admin-record-order"><button type="button" disabled={index===0||isSaving||Boolean(uploadingTarget)} aria-label={`Move ${item.title||item.name} earlier`} onClick={()=>moveCard(index,index-1)}>↑</button><button type="button" disabled={index===formData.length-1||isSaving||Boolean(uploadingTarget)} aria-label={`Move ${item.title||item.name} later`} onClick={()=>moveCard(index,index+1)}>↓</button></div></div>)}</div>
+                  {!visibleRecords.length && <p className="admin-empty-list">{formData.length?'No records match these filters.':'Your collection is empty. Add your first record below.'}</p>}
+                  <div className="admin-collection-actions"><button type="button" disabled={!hasLoadedTab||isSaving||Boolean(uploadingTarget)} onClick={()=>addItem(activeTab.id)}><FaPlus aria-hidden="true" />{activeTab.id==='upcoming'?'Add New Event':activeTab.id==='album'?'Create album':activeTab.id==='team'?'Add Core Member':'Add testimonial'}</button>{activeTab.id==='upcoming'&&<button type="button" disabled={isSaving||Boolean(uploadingTarget)} onClick={()=>addItem('upcoming',{title:'New Past Event',status_override:'past',is_published:false})}>Create past event</button>}{activeTab.id==='album'&&<button type="button" disabled={isSaving||Boolean(uploadingTarget)} onClick={()=>setFormData(current=>current.map(album=>album.description?.trim()?album:{...album,description:albumDescription(album)}))}>Fill missing descriptions</button>}</div>
+                  {activeTab.id==='upcoming'&&<details className="admin-past-starters"><summary>Prepare the MSU workshop and ITM hackathon</summary><p>These unpublished starters include your supplied posters and event details. Review them before publishing; event photo albums can be added separately.</p>{pastEventDrafts.filter(draft=>!formData.some(item=>item.title.toLowerCase()===draft.title.toLowerCase())).map(draft=><button key={draft.title} type="button" disabled={isSaving||Boolean(uploadingTarget)} onClick={()=>addItem('upcoming',{...draft,status_override:'past',is_published:false})}>Prepare {draft.title}</button>)}</details>}
+                </section>
                 {activeTab.id === "upcoming" && (
-                  <AnimatePresence>
+                  <>
                     {formData.map((event, index) =>
                       renderCard(event, index, "title", [
                         { key: "title", label: "Event Title" },
+                        { key: "date", label: "Event date (YYYY-MM-DD, optional for drafts)" },
                         { key: "starts_at", label: "Start date and time (India time)", type: "schedule" },
                         { key: "ends_at", label: "End date and time (India time)", type: "schedule" },
                         { key: "status_override", label: "Event status", type: "status" },
@@ -1240,18 +1039,8 @@ export default function Admin() {
                         },
                       ]),
                     )}
-                    <button
-                      onClick={() => addItem("upcoming")}
-                      className="flex flex-col items-center justify-center gap-2 w-full py-8 bg-white border-[3px] border-dashed border-black/10 hover:border-black text-black/40 hover:text-black rounded-2xl font-bold transition-all group"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-black/5 group-hover:bg-black group-hover:text-white flex items-center justify-center transition-colors">
-                        <FaPlus size={16} />
-                      </div>
-                      <span className="tracking-widest uppercase text-xs">
-                        Add New Event
-                      </span>
-                    </button>
-                  </AnimatePresence>
+
+                  </>
                 )}
 
                 {activeTab.id === "team" && (
@@ -1275,17 +1064,7 @@ export default function Admin() {
                         },
                       ]),
                     )}
-                    <button
-                      onClick={() => addItem("team")}
-                      className="flex flex-col items-center justify-center gap-2 w-full py-8 bg-white border-[3px] border-dashed border-black/10 hover:border-black text-black/40 hover:text-black rounded-2xl font-bold transition-all group"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-black/5 group-hover:bg-black group-hover:text-white flex items-center justify-center transition-colors">
-                        <FaPlus size={14} />
-                      </div>
-                      <span className="tracking-widest uppercase text-xs">
-                        Add Core Member
-                      </span>
-                    </button>
+
                   </>
                 )}
 
@@ -1314,17 +1093,7 @@ export default function Admin() {
                         },
                       ]),
                     )}
-                    <button
-                      onClick={() => addItem("album")}
-                      className="flex flex-col items-center justify-center gap-2 w-full py-8 bg-white border-[3px] border-dashed border-black/10 hover:border-black text-black/40 hover:text-black rounded-2xl font-bold transition-all group"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-black/5 group-hover:bg-black group-hover:text-white flex items-center justify-center transition-colors">
-                        <FaPlus size={16} />
-                      </div>
-                      <span className="tracking-widest uppercase text-xs">
-                        Add New Album
-                      </span>
-                    </button>
+
                   </>
                 )}
 
@@ -1347,17 +1116,7 @@ export default function Admin() {
                         },
                       ]),
                     )}
-                    <button
-                      onClick={() => addItem("testimonials")}
-                      className="flex flex-col items-center justify-center gap-2 w-full py-8 bg-white border-[3px] border-dashed border-black/10 hover:border-black text-black/40 hover:text-black rounded-2xl font-bold transition-all group"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-black/5 group-hover:bg-black group-hover:text-white flex items-center justify-center transition-colors">
-                        <FaPlus size={16} />
-                      </div>
-                      <span className="tracking-widest uppercase text-xs">
-                        Add New Testimonial
-                      </span>
-                    </button>
+
                   </>
                 )}
               </div>
